@@ -1,0 +1,314 @@
+/* give the active hand the full table width, with controls beside the board. */
+.table-page.playing {
+  max-width: 1600px;
+  padding: 16px 24px 32px;
+}
+.playing .table-title {
+  margin-bottom: 16px;
+}
+.playing .table-title h1 {
+  font-size: 30px;
+  margin: 6px 0;
+}
+.playing .table-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.playing .table-main .tabs {
+  margin-bottom: 12px;
+}
+.playing .table-main .tabs button {
+  padding-bottom: 10px;
+}
+.playing .my-table {
+  --play-card-width: clamp(60px, 7vw, 92px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  column-gap: 28px;
+  padding: 20px 24px;
+}
+.playing .my-table-heading {
+  grid-column: 1 / -1;
+  margin-bottom: 16px;
+}
+.playing .my-table h2 {
+  font-size: 26px;
+  margin: 0;
+}
+.playing .my-table .board {
+  gap: 10px;
+}
+.playing .my-table .board-row {
+  gap: 12px;
+}
+.playing .my-table .row-label {
+  width: 44px;
+}
+.playing .my-table .row-label span {
+  font-size: 11px;
+}
+.playing .my-table .row-label small {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.playing .my-table .row-cards {
+  gap: 8px;
+}
+.playing .my-table .card,
+.playing .my-table .slot {
+  width: var(--play-card-width);
+  height: calc(var(--play-card-width) * 1.35);
+  border-radius: 6px;
+}
+.playing .my-table .card-corner {
+  font-size: 28px;
+  top: 8px;
+  left: 8px;
+}
+.playing .my-table .card-corner i {
+  font-size: 21px;
+}
+.playing .my-table .card-suit {
+  font-size: 38px;
+  right: 8px;
+  bottom: 8px;
+}
+.playing .draw-area {
+  margin: 0;
+  padding: 0 0 0 24px;
+  border-top: 0;
+  border-left: 1px solid #ffffff25;
+  display: flex;
+  flex-direction: column;
+}
+.playing .draw-heading {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.playing .draw-cards {
+  margin: 20px 0;
+  gap: 10px;
+}
+.playing .turn-actions {
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+.playing .turn-actions .primary {
+  width: 100%;
+}
+.playing .discard-zone .card {
+  width: 44px;
+  height: 60px;
+}
+.playing .discard-zone .card-corner {
+  font-size: 16px;
+  top: 4px;
+  left: 4px;
+}
+.playing .discard-zone .card-corner i {
+  font-size: 12px;
+}
+.playing .discard-zone .card-suit {
+  font-size: 19px;
+  right: 4px;
+  bottom: 4px;
+}
+.playing .waiting {
+  margin: 0;
+  padding: 12px 0 0 24px;
+  border-top: 0;
+}
+.playing .opponents {
+  margin: 16px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr));
+}
+.playing .opponent {
+  padding: 18px;
+}
+.playing .opponent-heading {
+  margin-bottom: 12px;
+}
+.playing .opponent .card,
+.playing .opponent .slot {
+  width: 84px;
+  height: 114px;
+}
+.playing .opponent .card-corner {
+  font-size: 26px;
+  top: 6px;
+  left: 6px;
+}
+.playing .opponent .card-corner i {
+  font-size: 16px;
+}
+.playing .opponent .card-suit {
+  font-size: 35px;
+  right: 6px;
+  bottom: 6px;
+}
+.playing .opponent .row-label {
+  width: 44px;
+}
+.playing .opponent .row-label span,
+.playing .opponent .row-label small {
+  font-size: 10px;
+}
+.playing .table-sidebar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+}
+.playing .table-sidebar .panel {
+  padding: 16px;
+}
+.playing .standings h2 {
+  font-size: 24px;
+  margin: 0;
+}
+.playing .standing {
+  padding: 10px 0;
+}
+
+@media (max-width: 950px) {
+  .playing .my-table {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .playing .my-table .board {
+    align-items: center;
+  }
+  .playing .draw-area {
+    border-left: 0;
+    border-top: 1px solid #ffffff25;
+    margin-top: 16px;
+    padding: 16px 0 0;
+  }
+  .playing .draw-cards {
+    margin: 16px 0;
+  }
+  .playing .turn-actions .primary {
+    width: auto;
+  }
+  .playing .waiting {
+    margin-top: 16px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .table-page.playing {
+    padding: 12px 12px 24px;
+  }
+  .playing .table-title h1 {
+    font-size: 25px;
+  }
+  .playing .my-table {
+    --play-card-width: clamp(36px, calc((100vw - 112px) / 5), 72px);
+    padding: 16px 12px;
+  }
+  .playing .my-table .board {
+    align-items: stretch;
+  }
+  .playing .my-table .board-row {
+    gap: 8px;
+  }
+  .playing .my-table .row-label {
+    width: 32px;
+  }
+  .playing .my-table .row-label span,
+  .playing .my-table .row-label small {
+    font-size: 9px;
+  }
+  .playing .my-table .row-cards {
+    gap: 4px;
+  }
+  .playing .my-table .card-corner {
+    font-size: 22px;
+    top: 5px;
+    left: 5px;
+  }
+  .playing .my-table .card-corner i {
+    font-size: 15px;
+  }
+  .playing .my-table .card-suit {
+    font-size: 26px;
+    right: 5px;
+    bottom: 5px;
+  }
+  .playing .opponent {
+    padding: 14px 10px;
+  }
+  .playing .opponent .card,
+  .playing .opponent .slot {
+    width: clamp(35px, calc((100vw - 116px) / 5), 72px);
+    height: clamp(48px, calc((100vw - 116px) * 1.35 / 5), 97px);
+  }
+  .playing .opponent .row-label {
+    width: 32px;
+  }
+  .playing .opponent .card-corner {
+    font-size: 19px;
+  }
+  .playing .opponent .card-suit {
+    font-size: 25px;
+  }
+  .playing .table-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* keep every board in the same visual tier when the table is wide enough. */
+.playing .opponent-heading strong {
+  font-size: 16px;
+}
+.playing .opponent-heading > span {
+  font-size: 11px;
+}
+.playing .opponent .compact.board {
+  gap: 10px;
+}
+.playing .opponent .row-cards {
+  gap: 8px;
+}
+
+@media (min-width: 1280px) {
+  .playing .hand-boards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  .playing .hand-boards > .opponents {
+    display: contents;
+  }
+  .playing .my-table {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .playing .opponent {
+    padding: 20px 24px;
+  }
+  .playing .opponent-heading {
+    min-height: 31px;
+    margin-bottom: 16px;
+  }
+  .playing .opponent .board-row {
+    gap: 12px;
+  }
+  .playing .draw-area {
+    border-left: 0;
+    border-top: 1px solid #ffffff25;
+    padding: 16px 0 0;
+    margin-top: 16px;
+  }
+  .playing .turn-actions .primary {
+    width: auto;
+  }
+  .playing .waiting {
+    padding: 16px 0 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .playing .opponent .row-cards {
+    gap: 4px;
+  }
+}

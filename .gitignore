@@ -1,5 +1,13 @@
 .venv/
 __pycache__/
 .pytest_cache/
+.ruff_cache/
 *.egg-info/
 *.sqlite3*
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+work/
+.pnpm-store/
+.history/

@@ -162,3 +162,42 @@ def test_websocket_rejects_outsiders_and_bad_tokens(tmp_path):
                 with pytest.raises(WebSocketDisconnect) as error:
                     ws.receive_json()
                 assert error.value.code == 1008
+
+
+def test_invitation_endpoint_does_not_require_private_version(tmp_path):
+    with TestClient(create_app(f"sqlite:///{tmp_path / 'join.sqlite3'}")) as client:
+        players = [
+            client.post("/players", json={"name": name}).json()
+            for name in ("a", "b", "c")
+        ]
+
+        def auth(p):
+            return {"Authorization": "Bearer " + p["token"]}
+
+        created = client.post(
+            "/games", headers=auth(players[0]), json={"name": "friends"}
+        ).json()
+        url = f"/games/{created['game_id']}/join"
+        for player in players[1:]:
+            response = client.post(
+                url,
+                headers=auth(player),
+                json={"invite": created["invite"], "request_id": player["player_id"]},
+            )
+            assert response.status_code == 200
+        assert response.json()["state"]["version"] == 2
+        again = client.post(
+            url,
+            headers=auth(players[1]),
+            json={"invite": created["invite"], "request_id": "again"},
+        )
+        assert again.status_code == 200
+        assert again.json()["state"]["version"] == 2
+        assert (
+            client.post(
+                url,
+                headers=auth(players[1]),
+                json={"invite": "bad", "request_id": "bad"},
+            ).status_code
+            == 401
+        )

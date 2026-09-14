@@ -41,9 +41,18 @@ class Join(Model):
     invite: str = Field(min_length=1, max_length=128)
 
 
+class JoinInput(Model):
+    invite: str = Field(min_length=1, max_length=128)
+    request_id: str = Field(min_length=1, max_length=128)
+
+
 class Start(Model):
     type: Literal["start"]
     players: list[str] = Field(min_length=2, max_length=4)
+
+
+class AddCPU(Model):
+    type: Literal["add_cpu"]
 
 
 class Place(Model):
@@ -55,7 +64,7 @@ class Place(Model):
 class CommandInput(Model):
     request_id: str = Field(min_length=1, max_length=128)
     version: int = Field(ge=0)
-    command: Annotated[Join | Start | Place, Field(discriminator="type")]
+    command: Annotated[Join | Start | Place | AddCPU, Field(discriminator="type")]
 
 
 def create_app(
@@ -108,6 +117,12 @@ def create_app(
     @app.post("/games", status_code=201)
     def create_game(body: GameInput, actor: Annotated[str, Depends(player)]):
         return store().create(actor, body.name, Rules(**body.rules.model_dump()))
+
+    @app.post("/games/{game_id}/join")
+    def join_game(
+        game_id: str, body: JoinInput, actor: Annotated[str, Depends(player)]
+    ):
+        return store().join(game_id, actor, body.request_id, body.invite)
 
     @app.get("/games/{game_id}")
     def game(game_id: str, actor: Annotated[str, Depends(player)]):

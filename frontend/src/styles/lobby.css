@@ -1,0 +1,239 @@
+.welcome {
+  max-width: 480px;
+  margin: 56px auto;
+  padding: 0 24px;
+  display: block;
+}
+.welcome .eyebrow {
+  margin-bottom: 24px;
+}
+.welcome h1 {
+  font-size: 34px;
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
+}
+.welcome-form h2 {
+  margin: 18px 0 12px;
+  font-size: 34px;
+}
+.welcome-form {
+  padding: 36px;
+}
+.welcome-form p {
+  font-size: 14px;
+}
+.welcome-form .primary {
+  width: 100%;
+  margin-top: 24px;
+}
+.restore {
+  font-size: 11px;
+  color: #8b9389;
+  font-weight: 400;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.restore input {
+  display: block;
+  margin-top: 10px;
+  width: 100%;
+  font-size: 11px;
+}
+.feature-line {
+  display: flex;
+  gap: 20px;
+  font-size: 11px;
+  color: #798477;
+  margin-top: 34px;
+}
+.feature-line span:before {
+  content: '·';
+  margin-right: 10px;
+}
+.hero-cards {
+  display: flex;
+  margin: 32px 0 0 16px;
+}
+.hero-cards .card {
+  width: 83px;
+  height: 118px;
+  opacity: 1;
+  box-shadow: 0 7px 20px #173e3415;
+  transform: rotate(-12deg);
+}
+.hero-cards .card:nth-child(2) {
+  transform: rotate(0deg) translateY(-7px);
+  margin-left: -10px;
+}
+.hero-cards .card:nth-child(3) {
+  transform: rotate(12deg);
+  margin-left: -10px;
+}
+.lobby {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 55px 30px 75px;
+}
+.page-intro {
+  margin-bottom: 35px;
+}
+.page-intro .eyebrow {
+  margin-bottom: 15px;
+}
+.page-intro h1 {
+  font-size: 38px;
+}
+.page-intro .lede {
+  margin-top: 12px;
+  font-size: 14px;
+}
+.lobby-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 32px;
+}
+.tabs {
+  display: flex;
+  gap: 26px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+  margin-bottom: 25px;
+}
+.tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  padding: 0 0 15px;
+  color: #8a9289;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.tabs button[aria-selected='true'],
+.tabs button.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+  font-weight: 600;
+}
+.tabs small {
+  background: #e7eade;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+.variant-options {
+  display: flex;
+  gap: 12px;
+}
+.variant {
+  width: 50%;
+  background: #fffefa;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  text-align: left;
+  padding: 17px;
+  display: grid;
+  grid-template-columns: 25px 1fr;
+  gap: 4px 8px;
+  color: #526354;
+}
+.variant > span {
+  grid-row: span 2;
+  font-size: 24px;
+}
+.variant strong {
+  font-size: 13px;
+}
+.variant small {
+  font-size: 11px;
+  color: #7c887c;
+}
+.variant.active {
+  background: #edf1e8;
+  border-color: #71917a;
+}
+.setup details {
+  margin-top: 20px;
+}
+.setup summary {
+  font-size: 12px;
+}
+.setup summary span {
+  float: right;
+  color: #899383;
+  font-size: 11px;
+}
+.table-meta {
+  display: flex;
+  gap: 18px;
+  font-size: 10px;
+  color: #81907e;
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding: 18px 0;
+}
+.setup .primary {
+  width: 100%;
+}
+.recent h2 {
+  margin-top: 12px;
+}
+.empty {
+  text-align: center;
+  padding: 50px 15px;
+}
+.empty > span {
+  font-size: 56px;
+  color: #a4b29b;
+}
+.empty p {
+  font-size: 13px;
+  margin-top: 10px;
+}
+.saved-table {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  padding: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  color: var(--green);
+}
+.saved-table strong {
+  display: block;
+  font-size: 14px;
+}
+.saved-table small {
+  display: block;
+  color: #8b9588;
+  margin-top: 5px;
+}
+.note {
+  display: flex;
+  gap: 16px;
+  padding: 28px 14px;
+}
+.note > span {
+  color: #b19659;
+  font-size: 24px;
+}
+.note p {
+  font-size: 13px;
+  margin: 8px 0;
+}
+.note small {
+  display: block;
+  color: #8c9589;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.player-settings {
+  margin-top: 24px;
+  font-size: 12px;
+}
+.player-settings .text-button {
+  display: block;
+  margin-block: 12px;
+}

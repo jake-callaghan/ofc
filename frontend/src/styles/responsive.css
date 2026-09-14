@@ -1,0 +1,262 @@
+@media (min-width: 1400px) {
+  .card,
+  .slot {
+    width: 68px;
+    height: 94px;
+  }
+  .compact .card,
+  .compact .slot {
+    width: 40px;
+    height: 56px;
+  }
+  .compact .card-corner {
+    font-size: 18px;
+  }
+  .compact .card-suit {
+    font-size: 20px;
+  }
+}
+@media (max-width: 1050px) {
+  .welcome {
+    gap: 35px;
+    padding: 50px 30px;
+  }
+  .welcome h1 {
+    font-size: 32px;
+  }
+  .header .eyebrow {
+    display: none;
+  }
+  .table-layout {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 17px;
+  }
+  .table-page {
+    padding: 25px 25px 55px;
+  }
+  .my-table {
+    padding: 22px;
+  }
+  .card,
+  .slot {
+    width: 50px;
+    height: 72px;
+  }
+  .row-cards {
+    gap: 6px;
+  }
+  .row-label {
+    width: 46px;
+  }
+  .opponents {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .compact .card,
+  .compact .slot {
+    width: 31px;
+    height: 44px;
+  }
+  .compact .row-cards {
+    gap: 4px;
+  }
+  .table-sidebar .panel {
+    padding: 19px;
+  }
+  .lobby-grid {
+    gap: 22px;
+  }
+}
+@media (max-width: 780px) {
+  .header {
+    height: 77px;
+    padding: 0 22px;
+  }
+  .brand {
+    font-size: 23px;
+  }
+  .brand-mark {
+    font-size: 29px;
+  }
+  .welcome {
+    grid-template-columns: 1fr;
+    gap: 38px;
+    padding: 40px 24px;
+  }
+  .welcome h1 {
+    font-size: 32px;
+  }
+  .welcome .hero-cards {
+    display: none;
+  }
+  .feature-line {
+    margin-top: 20px;
+  }
+  .welcome-form {
+    padding: 25px;
+  }
+  .lobby {
+    padding: 35px 22px;
+  }
+  .page-intro h1 {
+    font-size: 43px;
+  }
+  .lobby-grid {
+    grid-template-columns: 1fr;
+  }
+  .table-page {
+    padding: 20px 18px 40px;
+  }
+  .table-layout {
+    grid-template-columns: 1fr;
+  }
+  .table-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .table-title h1 {
+    font-size: 35px;
+  }
+  .table-title {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .connection {
+    margin-top: 35px;
+    font-size: 9px;
+    padding: 7px 9px;
+  }
+  .table-subtitle {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 10px;
+  }
+  .table-main .tabs {
+    gap: 20px;
+  }
+  .hand-number {
+    font-size: 8px;
+  }
+  .opponents {
+    grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  }
+  .compact .card,
+  .compact .slot {
+    width: 37px;
+    height: 52px;
+  }
+  .my-table {
+    padding: 25px;
+  }
+  .card,
+  .slot {
+    width: 58px;
+    height: 81px;
+  }
+  .row-label {
+    width: 50px;
+  }
+  .row-cards {
+    gap: 8px;
+  }
+  .empty-table {
+    min-height: 220px;
+  }
+  .table-sidebar .invite {
+    grid-column: 1/-1;
+  }
+  footer {
+    padding: 23px;
+    flex-wrap: wrap;
+  }
+  footer > span:last-child {
+    display: none;
+  }
+  .history {
+    padding: 20px;
+  }
+  .history summary > span {
+    float: none;
+    display: block;
+    margin: 5px 0 0 15px;
+    max-width: 100%;
+    line-height: 1.5;
+  }
+}
+@media (max-width: 420px) {
+  .card,
+  .slot {
+    width: 45px;
+    height: 65px;
+  }
+  .row-cards {
+    gap: 5px;
+  }
+  .row-label {
+    width: 38px;
+  }
+  .board-row {
+    gap: 8px;
+  }
+  .my-table {
+    padding: 20px 15px;
+  }
+  .my-table h2 {
+    font-size: 31px;
+  }
+  .row-label span {
+    font-size: 8px;
+  }
+  .card-corner {
+    font-size: 18px;
+  }
+  .card-suit {
+    font-size: 25px;
+  }
+  .table-sidebar {
+    grid-template-columns: 1fr;
+  }
+  .table-sidebar .invite {
+    grid-column: auto;
+  }
+  .opponents {
+    grid-template-columns: 1fr;
+  }
+  .turn-actions .primary {
+    font-size: 11px;
+    padding: 12px;
+  }
+  .welcome h1 {
+    font-size: 32px;
+  }
+  .feature-line {
+    gap: 10px;
+    font-size: 9px;
+  }
+  .table-title h1 {
+    font-size: 30px;
+  }
+  .table-meta {
+    gap: 12px;
+  }
+  .variant {
+    padding: 13px;
+  }
+  .table-page {
+    padding-inline: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .table-title { flex-wrap: wrap; }
+  .table-heading-right { margin-left: auto; max-width: 100%; }
+  .table-heading-right .connection { margin-top: 0; }
+  .header-scores { gap: 10px 16px; }
+}

@@ -1,0 +1,241 @@
+.my-table {
+  background: var(--green);
+  border-radius: 12px;
+  padding: 27px 30px;
+  color: #edf0dd;
+  border: 1px solid #305446;
+}
+.my-table-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.my-table .eyebrow {
+  color: #a6b499;
+  font-size: 9px;
+}
+.my-table h2 {
+  font-size: 35px;
+  margin-top: 7px;
+}
+.pill {
+  padding: 7px 11px;
+  background: #ffffff0a;
+  border: 1px solid #ffffff15;
+  border-radius: 20px;
+  font-size: 10px;
+  color: #b5c1a8;
+}
+.pill.accent {
+  background: #d3b877;
+  color: #264635;
+  border-color: #d3b877;
+}
+.draw-area {
+  border-top: 1px solid #ffffff19;
+  margin-top: 27px;
+  padding-top: 21px;
+}
+.draw-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+.draw-heading span {
+  font-size: 10px;
+  color: #c3cba9;
+}
+.draw-area .hint {
+  font-size: 11px;
+  color: #a5b69c;
+  margin-top: 9px;
+}
+.draw-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 20px 0;
+  min-height: 82px;
+}
+.all-set {
+  color: #bacaad;
+  align-self: center;
+  font-size: 13px;
+}
+.discard-zone {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.discard-target {
+  border: 1px dashed #aabd983a;
+  background: none;
+  color: #aabb99;
+  padding: 14px;
+  font-size: 11px;
+  border-radius: 5px;
+}
+.discard-zone .card {
+  width: 34px;
+  height: 48px;
+}
+.discard-zone .card-corner {
+  font-size: 14px;
+  top: 3px;
+  left: 3px;
+}
+.discard-zone .card-corner i {
+  font-size: 11px;
+}
+.discard-zone .card-suit {
+  font-size: 16px;
+  right: 3px;
+  bottom: 3px;
+}
+.turn-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+.turn-actions .primary {
+  background: #dfc789;
+  color: #213e32;
+  border-color: #dfc789;
+}
+.turn-actions .primary:hover:not(:disabled) {
+  background: #ead6a5;
+}
+.turn-actions .text-button {
+  color: #b8c7a9;
+  font-size: 11px;
+}
+.waiting {
+  font-size: 12px;
+  color: #a5b899;
+  margin-top: 25px;
+  border-top: 1px solid #ffffff16;
+  padding-top: 20px;
+}
+.result {
+  margin-top: 20px;
+}
+.result h2 {
+  margin: 12px 0 20px;
+}
+.result-units {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+}
+.result-units > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.result-units span {
+  font-size: 11px;
+  color: #8a9482;
+}
+.result-units strong {
+  font-size: 26px;
+  font-weight: 500;
+}
+.result-units strong small {
+  font-size: 11px;
+  color: #8a9482;
+}
+.pair {
+  padding: 15px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.pair strong {
+  font-weight: 500;
+}
+.pair strong span {
+  color: #a0aa98;
+  margin: 0 6px;
+}
+.pair-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+  color: #8d9785;
+  font-size: 10px;
+  text-transform: capitalize;
+}
+.pair-values b {
+  color: #4f6756;
+  font-weight: 500;
+  margin-left: 5px;
+}
+.pair-total {
+  margin-left: auto;
+}
+.history h2 {
+  margin: 12px 0 20px;
+}
+.history details {
+  border-top: 1px solid var(--line);
+  padding: 18px 0;
+}
+.history summary {
+  font-size: 13px;
+}
+.history summary > span {
+  float: right;
+  color: #8a9583;
+  font-size: 10px;
+  max-width: 70%;
+}
+.history-boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+  padding: 15px 0;
+}
+.history-boards h3 {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.history > p {
+  font-size: 13px;
+}
+.loading {
+  margin: 70px auto;
+  max-width: 600px;
+}
+.loading .secondary {
+  margin-top: 20px;
+}
+footer {
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px 5%;
+  color: #929b88;
+  font-size: 10px;
+}
+footer > span:first-child {
+  letter-spacing: 1.5px;
+  color: #4b6651;
+}
+footer > span:last-child {
+  letter-spacing: 1px;
+  font-size: 8px;
+}
+summary {
+  cursor: pointer;
+  line-height: 1.7;
+}
+details[open] > summary {
+  margin-bottom: 14px;
+}

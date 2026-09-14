@@ -2,29 +2,29 @@
 
 A Python 3.13+ rules engine and FastAPI backend for persistent multiplayer
 open-face Chinese poker. Uses uv for environments, dependency locking, and tools.
-No frontend is included yet.
+The React JavaScript frontend lives in `frontend/`; see [frontend setup](frontend/README.md).
 
 ## Run
 
 ```sh
-uv sync --locked
-uv run uvicorn ofc.api:app --reload
+uv sync --directory server --locked
+uv run --directory server uvicorn ofc.api:app --reload
 ```
 
 Open http://127.0.0.1:8000/docs for the interactive API schema.
-SQLite defaults to `data/ofc.sqlite3`; set `OFC_DATABASE_URL` to choose another database
+SQLite defaults to `server/data/ofc.sqlite3` when launched from the project root; set `OFC_DATABASE_URL` to choose another database
 (e.g. `sqlite:////absolute/path/ofc.sqlite3`).
 The database is created on application startup. Keep this file to resume games
 across restarts. For local React development, proxy `/players`, `/games`, and
 `/health` to the backend, including WebSocket upgrade requests.
 
 ```sh
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
+uv run --directory server pytest
+uv run --directory server ruff check .
+uv run --directory server ruff format --check .
 ```
 
-`.python-version` selects Python 3.13; `uv.lock` pins dependencies.
+`server/.python-version` selects Python 3.13; `server/uv.lock` pins dependencies.
 
 ## Client workflow
 
@@ -33,7 +33,9 @@ uv run ruff format --check .
 2. Send `Authorization: Bearer <token>` with subsequent HTTP requests.
 3. `POST /games` with a name and optional rules. The creator receives a secret
    invitation code, which they can share with friends.
-4. Each friend registers and submits a `join` command with that invitation.
+4. Each friend registers and calls `POST /games/{game_id}/join` with `invite`
+   and a unique `request_id`. This endpoint does not require reading a private
+   game version before joining. The versioned `join` command remains available.
 5. The owner submits `start` with the active player IDs. Game membership can
    exceed table capacity; the selected active seats are fixed for the hand.
 6. Read your private draw and the current turn from `GET /games/{game_id}`.
@@ -204,10 +206,10 @@ owns its lifecycle. The default composition root constructs a SQLAlchemy adapter
 For managed PostgreSQL (including a compatible cloud-hosted PostgreSQL service):
 
 ```sh
-uv sync --locked --extra postgres
+uv sync --directory server --locked --extra postgres
 export OFC_DATABASE_URL='postgresql+psycopg://user:password@host:5432/ofc?sslmode=require'
-uv run alembic upgrade head
-uv run uvicorn ofc.api:app
+uv run --directory server alembic upgrade head
+uv run --directory server uvicorn ofc.api:app
 ```
 
 Use your provider's connection credentials and TLS settings. PostgreSQL schema
@@ -215,7 +217,7 @@ changes are explicit migrations, never automatic startup DDL. SQLite creates a
 fresh schema automatically for local development. To manage a fresh SQLite
 schema with migrations instead, create its parent directory and run `uv run
 alembic upgrade head` before the first startup. For an existing **current ORM**
-local schema created by startup, use `uv run alembic stamp 0001` once before
+local schema created by startup, use `uv run --directory server alembic stamp 0001` once before
 future upgrades; stamping does not migrate an older/different schema.
 
 PostgreSQL commands lock the game row with `SELECT FOR UPDATE`; SQLite uses
@@ -237,3 +239,23 @@ a **dedicated PostgreSQL test database** to run the same checks there; those tes
 create tables and leave uniquely identified fixture records. PostgreSQL is not
 required for the local suite, and live PostgreSQL validation is skipped unless
 that variable is set.
+
+## CPU practice players
+
+The host can send a versioned `{"type": "add_cpu"}` command between hands. The
+response includes `cpu_players`, whose IDs can be included in the next `start`
+command. CPU seats persist in the game's JSON state, so no schema migration is
+needed; existing games default to zero CPUs. CPU identities have no exposed login
+token. At least one human must participate in each hand.
+
+`server/ofc/cpu.py` provides a bounded, deterministic heuristic over legal
+placements. It searches ordinary draws and uses a beam search for Fantasyland,
+favouring pairs, lower-row flush/straight potential, valid boards, and royalties.
+It receives only `public_view(game, cpu_id)`, not the private deck or opponents'
+draws. It is intended for basic practice and can foul.
+
+CPU replies are applied within the triggering command's transaction, stopping
+at the next human turn. State, scoring, and the command receipt commit together,
+so retries and reconnects cannot apply CPU moves twice or strand a CPU turn.
+The frontend receives the resulting snapshot through the existing API/WebSocket
+protocol. A command may advance several game versions when CPUs act.

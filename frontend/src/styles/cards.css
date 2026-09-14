@@ -1,0 +1,155 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.board-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.row-label {
+  width: 56px;
+  flex-shrink: 0;
+}
+.row-label span {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 9px;
+}
+.row-label small {
+  display: block;
+  font-size: 9px;
+  margin-top: 6px;
+  opacity: 0.5;
+}
+.row-cards {
+  display: flex;
+  gap: 8px;
+}
+.card,
+.slot {
+  width: 59px;
+  height: 82px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  position: relative;
+}
+.card {
+  border: 1px solid #e0ded2;
+  background: #fffdf1;
+  color: #263d33;
+  box-shadow: 0 2px 2px #00000007;
+  text-align: left;
+  padding: 7px;
+}
+.card:disabled {
+  opacity: 1;
+}
+.card.red {
+  color: #b15849;
+}
+.card-corner {
+  position: absolute;
+  top: 6px;
+  left: 7px;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 600;
+}
+.card-corner i {
+  font-style: normal;
+  display: block;
+  font-size: 16px;
+  margin-top: 3px;
+}
+.card-suit {
+  position: absolute;
+  bottom: 7px;
+  right: 7px;
+  font-size: 29px;
+}
+.card.selected {
+  outline: 3px solid var(--gold);
+  transform: translateY(-7px);
+}
+.draft-card {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+.slot {
+  border: 1px dashed #ffffff29;
+  background: #ffffff03;
+  color: #ffffff26;
+  font-size: 24px;
+}
+.slot:disabled {
+  opacity: 1;
+}
+.slot.available {
+  background: #d1bd7220;
+  border-color: #c7b87d;
+  color: #d7c691;
+}
+.slot.available:hover {
+  background: #d1bd7240;
+}
+.hidden-card {
+  background: repeating-linear-gradient(
+    45deg,
+    #74897012,
+    #74897012 3px,
+    #74897028 3px,
+    #74897028 6px
+  );
+  border: 1px solid #b9c4ac;
+  color: #91a584;
+}
+.compact .card,
+.compact .slot {
+  width: 34px;
+  height: 48px;
+  border-radius: 3px;
+}
+.compact .row-cards {
+  gap: 4px;
+}
+.compact .row-label {
+  width: 37px;
+}
+.compact .board-row {
+  gap: 8px;
+}
+.compact .row-label span {
+  font-size: 7px;
+  letter-spacing: 0.6px;
+}
+.compact .row-label small {
+  font-size: 7px;
+  margin-top: 3px;
+}
+.compact .slot {
+  border-color: #9fae9340;
+  color: #a1b198;
+}
+.compact .card {
+  padding: 3px;
+}
+.compact .card-corner {
+  font-size: 14px;
+  top: 3px;
+  left: 3px;
+}
+.compact .card-corner i {
+  font-size: 10px;
+  margin-top: 2px;
+}
+.compact .card-suit {
+  font-size: 17px;
+  bottom: 3px;
+  right: 3px;
+}
+.compact.board {
+  gap: 7px;
+}

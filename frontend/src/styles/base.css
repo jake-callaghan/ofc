@@ -1,0 +1,250 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap');
+:root {
+  font-family: 'DM Sans', Arial, sans-serif;
+  color: #253a32;
+  background: #f7f6f0;
+  font-synthesis: none;
+  font-weight: 400;
+  --green: #173e34;
+  --muted: #758078;
+  --line: #dce0d7;
+  --gold: #d9b974;
+  --red: #ad4e43;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+button,
+input,
+select,
+textarea {
+  outline-offset: 4px;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #ba8e36;
+}
+button {
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2 {
+  font-family: 'Libre Caslon Display', Georgia, serif;
+  font-weight: 400;
+}
+h1 {
+  font-size: clamp(42px, 5vw, 70px);
+  line-height: 1.06;
+  letter-spacing: -1.8px;
+}
+h1 em {
+  font-weight: 400;
+  color: #617765;
+}
+h2 {
+  font-size: 34px;
+  letter-spacing: -0.5px;
+}
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+p {
+  line-height: 1.65;
+  color: #718076;
+}
+small {
+  font-size: 11px;
+}
+.header {
+  height: 98px;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: none;
+  border: 0;
+  color: var(--green);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -1.4px;
+  padding: 0;
+}
+.brand-mark {
+  font-size: 34px;
+}
+.brand-dot {
+  color: #bca05c;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+}
+.eyebrow,
+.section-number {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+.eyebrow {
+  color: #7a877c;
+}
+.identity {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 13px;
+}
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e7ebe1;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 12px;
+  color: var(--green);
+  text-transform: uppercase;
+}
+.panel {
+  background: #fffef9;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 27px;
+}
+.primary,
+.secondary {
+  border-radius: 6px;
+  padding: 13px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+}
+.primary {
+  background: var(--green);
+  color: #fffdf1;
+  border: 1px solid var(--green);
+}
+.primary:hover:not(:disabled) {
+  background: #285347;
+}
+.secondary {
+  border: 1px solid #c5d0c5;
+  background: transparent;
+  color: var(--green);
+}
+.secondary:hover:not(:disabled) {
+  background: #e9ede4;
+}
+.text-button,
+.breadcrumb {
+  border: 0;
+  background: none;
+  color: var(--green);
+  font-size: 12px;
+  padding: 5px 0;
+  text-align: left;
+}
+.text-button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.error {
+  background: #fbede8;
+  color: #963f33;
+  padding: 13px 16px;
+  border: 1px solid #eac8bd;
+  border-radius: 6px;
+  font-size: 13px;
+  margin: 12px 0;
+}
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 22px;
+  margin-bottom: 9px;
+}
+input:not([type='checkbox']):not([type='file']),
+select,
+textarea {
+  display: block;
+  width: 100%;
+  border: 1px solid #cfd6cc;
+  border-radius: 5px;
+  background: #fffefa;
+  padding: 13px;
+  color: #2c4237;
+  margin-top: 9px;
+  font-size: 14px;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #9aa297;
+}
+textarea {
+  resize: vertical;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+  font-weight: 400;
+  font-size: 13px;
+}
+.check input {
+  accent-color: var(--green);
+  width: 16px;
+  height: 16px;
+}
+.hint {
+  font-size: 12px;
+  color: #7c887e;
+}
+.lede {
+  font-size: 16px;
+  margin-top: 22px;
+  line-height: 1.8;
+}

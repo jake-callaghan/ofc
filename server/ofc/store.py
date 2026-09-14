@@ -1,9 +1,11 @@
 """application service; persistence is supplied through a repository protocol."""
 
 import secrets
+from copy import deepcopy
 from hashlib import sha256
 from uuid import uuid4
 
+from ofc.cpu import choose_move
 from ofc.engine import new_game, public_view, transition
 from ofc.persistence.ports import GameRecord, Receipt, Repository, State, UnitOfWork
 from ofc.rules import RuleError, Rules
@@ -70,6 +72,12 @@ class Store:
             record = self._load(uow, game_id)
             return self._view(uow, game_id, record.state, actor)
 
+    def join(self, game_id: str, actor: str, request_id: str, invite: str) -> State:
+        # invitation holders cannot read the table version until they are members.
+        return self.command(
+            game_id, actor, request_id, None, {"type": "join", "invite": invite}
+        )
+
     def command(
         self, game_id: str, actor: str, request_id: str, version: int, command: State
     ) -> State:
@@ -94,9 +102,50 @@ class Store:
                     raise Unauthorized("invalid invitation")
             elif actor not in state["members"]:
                 raise Unauthorized("not a member")
-            if state["version"] != version:
+            if command["type"] == "join" and actor in state["members"]:
+                return {
+                    "applied_version": state["version"],
+                    "state": self._view(uow, game_id, state, actor),
+                }
+            if version is None and command["type"] != "join":
+                raise RuleError("a version is required for game commands")
+            if version is not None and state["version"] != version:
                 raise Conflict("stale version; fetch the latest game")
-            updated = transition(state, actor, command)
+            if command["type"] == "add_cpu":
+                rules = Rules(**state["rules"])
+                if actor != state["owner"]:
+                    raise Unauthorized("only the owner may add CPU players")
+                if state["hand"] and state["hand"]["status"] == "playing":
+                    raise RuleError("add CPU players between hands")
+                if len(state.get("cpu_players", [])) >= rules.capacity - 1:
+                    raise RuleError("CPU seat limit reached")
+                updated = deepcopy(state)
+                cpu_id = str(uuid4())
+                cpus = updated.setdefault("cpu_players", [])
+                uow.add_player(
+                    cpu_id,
+                    f"CPU {len(cpus) + 1}",
+                    self.digest(secrets.token_urlsafe(32)),
+                )
+                cpus.append(cpu_id)
+                updated["members"].append(cpu_id)
+                updated["version"] += 1
+            else:
+                if command["type"] == "start" and all(
+                    p in state.get("cpu_players", []) for p in command["players"]
+                ):
+                    raise RuleError("select at least one human player")
+                updated = transition(state, actor, command)
+            # finish consecutive CPU turns in the same transaction. a disconnect
+            # cannot leave a committed game waiting for a background worker.
+            while updated["hand"] and updated["hand"]["status"] == "playing":
+                cpu_id = updated["hand"]["queue"][0]["player"]
+                if cpu_id not in updated.get("cpu_players", []):
+                    break
+                move = choose_move(
+                    public_view(updated, cpu_id), cpu_id, Rules(**updated["rules"])
+                )
+                updated = transition(updated, cpu_id, move)
             hand = updated["hand"]
             if (
                 hand

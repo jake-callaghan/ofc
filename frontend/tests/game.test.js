@@ -1,0 +1,72 @@
+import { invitation } from '../src/lib/navigation.js';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  assignCard,
+  capacity,
+  emptyBoard,
+  placement,
+} from '../src/lib/game.js';
+
+test('a complete pineapple turn requires two placements and one discard', () => {
+  const draw = ['Ac', 'Kd', '2h'];
+  assert.equal(
+    placement(draw, { Ac: 'bottom', Kd: 'middle' }, 2, emptyBoard()),
+    null,
+  );
+  assert.deepEqual(
+    placement(
+      draw,
+      { Ac: 'bottom', Kd: 'middle', '2h': 'discard' },
+      2,
+      emptyBoard(),
+    ),
+    {
+      type: 'place',
+      placements: { top: [], middle: ['Kd'], bottom: ['Ac'] },
+      discards: ['2h'],
+    },
+  );
+});
+test('overfilling a row leaves the draft intact', () => {
+  const board = { ...emptyBoard(), top: ['Ac', 'Kd', 'Qh'] };
+  const draft = { '2c': 'middle' };
+  assert.equal(assignCard(draft, '2c', 'top', board), draft);
+  assert.deepEqual(assignCard(draft, '2c', null, board), {});
+});
+test('moving a draft card accounts for its old position', () => {
+  const board = { ...emptyBoard(), top: ['Ac', 'Kd'] };
+  assert.deepEqual(assignCard({ Qh: 'top' }, 'Qh', 'top', board), {
+    Qh: 'top',
+  });
+});
+test('foreign cards and excess discards cannot be submitted', () => {
+  assert.equal(
+    placement(['Ac'], { Ac: 'top', Kd: 'bottom' }, 1, emptyBoard()),
+    null,
+  );
+  assert.equal(placement(['Ac'], { Ac: 'discard' }, 1, emptyBoard()), null);
+});
+test('fantasyland validates 13 cards and four discards', () => {
+  const draw = Array.from({ length: 17 }, (_, i) => `card${i}`);
+  const draft = Object.fromEntries(
+    draw.map((card, i) => [
+      card,
+      i < 3 ? 'top' : i < 8 ? 'middle' : i < 13 ? 'bottom' : 'discard',
+    ]),
+  );
+  assert.equal(placement(draw, draft, 13, emptyBoard()).discards.length, 4);
+});
+test('variant capacity and share links', () => {
+  assert.equal(capacity({ variant: 'classic' }), 4);
+  assert.equal(capacity({ variant: 'pineapple' }), 3);
+  assert.equal(capacity({ variant: 'classic', candyland: true }), 3);
+  const data = { game: 'abc', invite: 'secret' };
+  assert.deepEqual(
+    invitation(
+      `http://localhost/#join=${encodeURIComponent(JSON.stringify(data))}`,
+    ),
+    data,
+  );
+  assert.throws(() => invitation('http://localhost/#join=bad'));
+});
