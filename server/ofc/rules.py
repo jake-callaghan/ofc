@@ -19,8 +19,18 @@ class Rules:
     fantasyland: str = "progressive"
     moon: bool = False
     candyland: bool = False
+    turn_seconds: int | None = None
+    orbits: int | None = None
 
     def __post_init__(self):
+        if self.orbits is not None and (
+            type(self.orbits) is not int or not 1 <= self.orbits <= 100
+        ):
+            raise RuleError("orbit limit must be between 1 and 100")
+        if self.turn_seconds is not None and (
+            type(self.turn_seconds) is not int or not 10 <= self.turn_seconds <= 300
+        ):
+            raise RuleError("turn timer must be between 10 and 300 seconds")
         if self.variant not in {"classic", "pineapple"}:
             raise RuleError("unknown dealing variant")
         if self.fantasyland not in {"off", "standard", "progressive"}:

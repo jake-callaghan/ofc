@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import useTurnTimer from './useTurnTimer.js';
 import {
   assignCard,
   emptyBoard,
@@ -14,13 +15,19 @@ export default function TurnEditor({
   busy,
   connected,
 }) {
+  const secondsLeft = useTurnTimer(game);
+  const timedOut = secondsLeft === 0;
   const hand = game.hand;
   const draw = hand.draws[session.player_id] || [];
   const board = hand.boards[session.player_id] || emptyBoard();
   const [draft, setDraft] = useState({}),
     [selected, setSelected] = useState(null);
   const myTurn = hand.turn?.player === session.player_id;
-  const keep = myTurn ? hand.turn.keep : 0;
+  const keep = myTurn
+    ? hand.turn.keep
+    : hand.fantasy[session.player_id]
+      ? 13
+      : 5;
   const proposedDraft = proposeDiscards(draw, draft, keep);
   const value = placement(draw, proposedDraft, keep, board);
   const move = (row) => {
@@ -35,7 +42,6 @@ export default function TurnEditor({
     setDraft(assignCard(draft, card, null, board));
     setSelected(card);
   };
-  const committed = Object.values(board).flat().length;
   const canEdit = !busy && connected;
   const unassignedCards = draw.filter((card) => !proposedDraft[card]);
   const discardedCards = draw.filter(
@@ -53,24 +59,28 @@ export default function TurnEditor({
   }
 
   return (
-    <section className="my-table">
+    <section className={`my-table ${myTurn ? 'is-turn' : ''}`}>
       <div className="my-table-heading">
         <div>
           <h2>Your hand</h2>
         </div>
         <span className={`pill ${myTurn ? 'accent' : ''}`}>
-          {myTurn ? '● Your turn' : `${committed}/13 placed`}
+          {myTurn
+            ? 'Your turn'
+            : hand.status === 'complete'
+              ? 'Complete'
+              : 'Waiting'}
         </span>
       </div>
       <Board
         board={board}
         draft={draft}
         selected={selected}
-        editable={myTurn && canEdit}
+        editable={draw.length > 0 && canEdit}
         move={move}
         remove={remove}
       />
-      {myTurn ? (
+      {draw.length > 0 ? (
         <div className="draw-area">
           <div className="draw-heading">
             <strong>
@@ -81,7 +91,11 @@ export default function TurnEditor({
               {discardCount > 0 ? ` · discard ${discardCount}` : ''}
             </span>
           </div>
-          <p className="hint">Select a card, then a row.</p>
+          <p className="hint">
+            {myTurn
+              ? 'Select a card, then a row.'
+              : 'Arrange your cards while you wait for your turn.'}
+          </p>
           <div className="draw-cards">
             {unassignedCards.map((card) => (
               <Card
@@ -133,10 +147,14 @@ export default function TurnEditor({
             </button>
             <button
               className="primary"
-              disabled={!value || busy || !connected}
+              disabled={!myTurn || timedOut || !value || busy || !connected}
               onClick={() => command(value)}
             >
-              {busy ? 'Confirming…' : 'Confirm placement →'}
+              {busy
+                ? 'Confirming…'
+                : myTurn
+                  ? 'Confirm placement →'
+                  : 'Waiting for your turn'}
             </button>
           </div>
         </div>

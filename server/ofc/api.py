@@ -1,6 +1,8 @@
 """http commands and authenticated websocket snapshots for a react client."""
 
 import asyncio
+import logging
+import time
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
@@ -29,6 +31,8 @@ class RuleInput(Model):
     fantasyland: Literal["off", "standard", "progressive"] = "progressive"
     moon: bool = False
     candyland: bool = False
+    turn_seconds: int | None = Field(default=None, ge=10, le=300)
+    orbits: int | None = Field(default=None, ge=1, le=100)
 
 
 class GameInput(Model):
@@ -55,6 +59,10 @@ class AddCPU(Model):
     type: Literal["add_cpu"]
 
 
+class Leave(Model):
+    type: Literal["leave"]
+
+
 class Place(Model):
     type: Literal["place"]
     placements: dict[Literal["top", "middle", "bottom"], list[str]]
@@ -64,7 +72,9 @@ class Place(Model):
 class CommandInput(Model):
     request_id: str = Field(min_length=1, max_length=128)
     version: int = Field(ge=0)
-    command: Annotated[Join | Start | Place | AddCPU, Field(discriminator="type")]
+    command: Annotated[
+        Join | Start | Place | AddCPU | Leave, Field(discriminator="type")
+    ]
 
 
 def create_app(
@@ -76,9 +86,25 @@ def create_app(
             repository if repository is not None else build_repository(database_url)
         )
         app.state.store = Store(adapter)
+        stopped = asyncio.Event()
+
+        async def timers():
+            while not stopped.is_set():
+                try:
+                    await run_in_threadpool(app.state.store.process_timeouts)
+                except Exception:
+                    logging.getLogger(__name__).exception("turn timer scan failed")
+                try:
+                    await asyncio.wait_for(stopped.wait(), timeout=0.5)
+                except TimeoutError:
+                    pass
+
+        timer_task = asyncio.create_task(timers())
         try:
             yield
         finally:
+            stopped.set()
+            await timer_task
             if repository is None:
                 adapter.close()
 
@@ -158,7 +184,13 @@ def create_app(
             while True:
                 snapshot = await run_in_threadpool(store().get, game_id, actor)
                 if snapshot["version"] != version:
-                    await websocket.send_json({"type": "snapshot", "state": snapshot})
+                    await websocket.send_json(
+                        {
+                            "type": "snapshot",
+                            "state": snapshot,
+                            "server_time": time.time(),
+                        }
+                    )
                     version = snapshot["version"]
                 # a timed receive detects disconnects even when a game is idle.
                 try:

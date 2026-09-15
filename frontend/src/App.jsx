@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { readSaved, save } from './lib/storage.js';
 import { route } from './lib/navigation.js';
 import Header from './components/Header.jsx';
+import Footer from './components/Footer.jsx';
 import Welcome from './features/player/Welcome.jsx';
 import Lobby from './features/lobby/Lobby.jsx';
 import Table from './features/table/Table.jsx';
@@ -51,6 +52,7 @@ export default function App() {
           pendingJoin={page.join}
         />
       )}
+      <Footer />
     </>
   );
 }

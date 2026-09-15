@@ -25,9 +25,6 @@ export default function Board({
           >
             <div className="row-label">
               <span>{row}</span>
-              <small>
-                {placed.length + pending.length}/{size}
-              </small>
             </div>
             <div className="row-cards">
               {placed.map((card) => (

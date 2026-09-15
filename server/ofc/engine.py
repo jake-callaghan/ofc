@@ -17,6 +17,9 @@ def new_game(owner, name, rules):
         "members": [owner],
         "version": 0,
         "hand_number": 0,
+        "normal_hands": 0,
+        "orbit_size": None,
+        "status": "active",
         "button": 0,
         "fantasy": {},
         "hand": None,
@@ -26,6 +29,8 @@ def new_game(owner, name, rules):
 def start_hand(game, actor, players, deck=None):
     if actor != game["owner"]:
         raise RuleError("only the owner may start a hand")
+    if game.get("status") == "complete":
+        raise RuleError("orbit limit reached; this game is complete")
     if game["hand"] and game["hand"]["status"] != "complete":
         raise RuleError("a hand is already running")
     rules = Rules(**game["rules"])
@@ -33,6 +38,10 @@ def start_hand(game, actor, players, deck=None):
         raise RuleError("invalid active player count")
     if any(p not in game["members"] for p in players):
         raise RuleError("active players must be game members")
+    if rules.orbits and any(
+        game["fantasy"].get(p) and p not in players for p in game["members"]
+    ):
+        raise RuleError("include players with pending fantasyland before continuing")
     # membership order fixes the seat order across hands and sit-outs.
     players = [p for p in game["members"] if p in players]
     available = list(DECK if deck is None else deck)
@@ -46,8 +55,17 @@ def start_hand(game, actor, players, deck=None):
     )
     if required > 52:
         raise RuleError("rules and fantasyland awards exceed deck capacity")
+    if rules.orbits and game.get("orbit_size") is None:
+        game["orbit_size"] = len(players)
+    # the dealer must occupy an active seat, even when members are sitting out.
+    button = game["button"] % len(game["members"])
+    seats = game["members"][button:] + game["members"][:button]
+    dealer = next(p for p in seats if p in players)
+    button = game["members"].index(dealer)
+    game["button"] = button
     hand = {
         "number": game["hand_number"] + 1,
+        "dealer": dealer,
         "status": "playing",
         "players": players,
         "deck": available,
@@ -60,7 +78,6 @@ def start_hand(game, actor, players, deck=None):
     }
     # fantasy boards are committed before normal play but stay hidden until showdown.
     normal = [p for p in players if not fantasies[p]]
-    button = game["button"] % len(game["members"])
     ordered = game["members"][button + 1 :] + game["members"][: button + 1]
     normal = [p for p in ordered if p in normal]
     for p in players:
@@ -76,11 +93,19 @@ def start_hand(game, actor, players, deck=None):
             hand["queue"].append({"player": p, "draw": draw, "keep": keep})
     game["hand"] = hand
     game["hand_number"] += 1
-    _deal_turn(hand)
+    # reserve each player's opening draw before anyone places cards.
+    for turn in hand["queue"]:
+        if turn["player"] not in hand["draws"]:
+            _deal_draw(hand, turn)
 
 
 def _deal_turn(hand):
     turn = hand["queue"][0]
+    if not hand["draws"].get(turn["player"]):
+        _deal_draw(hand, turn)
+
+
+def _deal_draw(hand, turn):
     n = turn["draw"]
     if len(hand["deck"]) < n:
         raise RuleError("deck exhausted")
@@ -124,9 +149,28 @@ def place(game, actor, placements, discards):
             game["fantasy"][p] = next_fantasy(
                 evaluation, rules, bool(hand["fantasy"][p])
             )
+        if not any(hand["fantasy"].values()):
+            game["normal_hands"] = game.get("normal_hands", 0) + 1
+        update_completion(game)
         # hold the button while an active player has earned another fantasy hand.
         if not any(game["fantasy"].get(p) for p in hand["players"]):
-            game["button"] = (game["button"] + 1) % len(game["members"])
+            dealer = hand.get("dealer", game["members"][game["button"]])
+            active = hand["players"]
+            if dealer not in active:
+                dealer = active[0]
+            next_dealer = active[(active.index(dealer) + 1) % len(active)]
+            game["button"] = game["members"].index(next_dealer)
+
+
+def update_completion(game):
+    limit = game["rules"].get("orbits")
+    size = game.get("orbit_size")
+    if limit and size and game.get("normal_hands", 0) >= limit * size:
+        game["status"] = (
+            "active"
+            if any(game["fantasy"].get(p) for p in game["members"])
+            else "complete"
+        )
 
 
 def transition(game, actor, command):
@@ -137,11 +181,28 @@ def transition(game, actor, command):
         if actor in state["members"]:
             raise RuleError("already a member")
         state["members"].append(actor)
+        if state["owner"] is None:
+            state["owner"] = actor
     else:
         if actor not in state["members"]:
             raise RuleError("not a member")
         if kind == "start":
             start_hand(state, actor, command["players"])
+        elif kind == "leave":
+            if state["hand"] and state["hand"]["status"] == "playing":
+                raise RuleError("leave the table between hands")
+            state["members"].remove(actor)
+            if state["owner"] == actor:
+                state["owner"] = next(
+                    (
+                        p
+                        for p in state["members"]
+                        if p not in state.get("cpu_players", [])
+                    ),
+                    None,
+                )
+            state["button"] %= max(1, len(state["members"]))
+            update_completion(state)
         elif kind == "place":
             place(state, actor, command["placements"], command["discards"])
         else:

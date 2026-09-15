@@ -60,6 +60,15 @@ class SQLUnitOfWork:
             raise LookupError("cannot save a missing game")
         row.state = deepcopy(state)
 
+    def due_game_ids(self, now: float) -> list[str]:
+        return list(
+            self.session.scalars(
+                select(GameRow.id).where(
+                    GameRow.state["hand"]["deadline"].as_float() <= now
+                )
+            )
+        )
+
     def receipt(self, game_id: str, actor: str, request_id: str) -> Receipt | None:
         row = self.session.get(CommandRow, (game_id, actor, request_id))
         return Receipt(deepcopy(row.payload), row.version) if row else None

@@ -1,4 +1,4 @@
-import ThemePicker from './ThemePicker.jsx';
+import Settings from './Settings.jsx';
 
 const brand = (
   <>
@@ -16,7 +16,7 @@ export default function Header({ session, home }) {
         {brand}
       </button>
       <div className="header-right">
-        <ThemePicker />
+        <Settings />
         {session && (
           <span className="identity">
             <span className="avatar">

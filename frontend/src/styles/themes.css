@@ -1,35 +1,88 @@
+/* separate table felt from accents so dark themes retain readable controls. */
 :root {
+  color-scheme: light;
+  --green: #173e34;
+  --felt: #173e34;
   --page: #f7f6f0;
   --surface: #fffef9;
-  --soft: #ecefe5;
+  --soft: #e7edde;
   --ink: #253a32;
+  --line: #d2dace;
+  --muted: #5d6d62;
+  --gold: #dfc789;
+  --on-accent: #fffdf1;
 }
 :root[data-theme='ocean'] {
-  --green: #19465e;
-  --page: #f0f5f8;
-  --surface: #fbfdff;
-  --soft: #e2edf3;
-  --ink: #243c4b;
-  --line: #ccdae3;
-  --muted: #637b89;
+  --green: #006b87;
+  --felt: #06465d;
+  --page: #d9f1f5;
+  --surface: #f4fdff;
+  --soft: #bee4ed;
+  --ink: #123e50;
+  --line: #9bcbd7;
+  --muted: #3e6978;
+  --gold: #7fe8e0;
 }
 :root[data-theme='plum'] {
-  --green: #563450;
-  --page: #f7f1f5;
-  --surface: #fffbfe;
-  --soft: #eee2eb;
-  --ink: #493344;
-  --line: #e0cfdb;
-  --muted: #82697b;
+  --green: #80376b;
+  --felt: #501d48;
+  --page: #f4dfee;
+  --surface: #fff5fc;
+  --soft: #e9c6df;
+  --ink: #51213f;
+  --line: #d6aac9;
+  --muted: #79536d;
+  --gold: #f5b8d9;
 }
 :root[data-theme='slate'] {
   --green: #343e50;
-  --page: #f1f3f6;
+  --felt: #283243;
+  --page: #e4e8ef;
   --surface: #fcfdff;
-  --soft: #e3e7ee;
+  --soft: #d1d9e5;
   --ink: #303b4b;
-  --line: #cfd6e0;
-  --muted: #6c788b;
+  --line: #bac5d5;
+  --muted: #546178;
+  --gold: #bbcdf0;
+}
+:root[data-theme='sunset'] {
+  --green: #9b3e20;
+  --felt: #6d2b22;
+  --page: #ffe3c4;
+  --surface: #fff6e8;
+  --soft: #f5cba5;
+  --ink: #592e22;
+  --line: #dfaf8e;
+  --muted: #815740;
+  --gold: #ffd27d;
+}
+:root[data-theme='midnight'] {
+  color-scheme: dark;
+  --green: #90c7ff;
+  --felt: #172d4c;
+  --page: #0b1120;
+  --surface: #151f31;
+  --soft: #22324a;
+  --ink: #e7efff;
+  --line: #3a4c67;
+  --muted: #a9b9d0;
+  --gold: #b8a4ff;
+  --red: #ff9a91;
+  --on-accent: #10243c;
+}
+:root[data-theme='casino'] {
+  color-scheme: dark;
+  --green: #e5c374;
+  --felt: #173c31;
+  --page: #141713;
+  --surface: #20271f;
+  --soft: #303c2e;
+  --ink: #f5f0dd;
+  --line: #4c5945;
+  --muted: #bfcaaf;
+  --gold: #e5c374;
+  --red: #ff9a91;
+  --on-accent: #282317;
 }
 :root {
   background: var(--page);
@@ -76,4 +129,266 @@ select.theme-picker {
   margin: 0;
   padding: 8px 10px;
   font-size: 12px;
+}
+
+.install-app {
+  position: relative;
+}
+.install-help {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: min(300px, 85vw);
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px #0002;
+  z-index: 20;
+}
+.install-help p {
+  color: var(--ink);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+@media (max-width: 600px) {
+  .install-help {
+    right: auto;
+    left: 0;
+  }
+}
+
+.primary {
+  color: var(--on-accent);
+}
+.my-table,
+.empty-table {
+  background: var(--felt);
+  border-color: color-mix(in srgb, var(--felt), white 20%);
+  color: #f7f5ef;
+}
+.my-table
+  :is(
+    .hint,
+    .eyebrow,
+    .waiting,
+    .all-set,
+    .pill,
+    .draw-heading span,
+    .text-button
+  ),
+.empty-table :is(p, .eyebrow, .table-emblem) {
+  color: #d6dfdf;
+}
+.turn-actions .primary,
+.pill.accent {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #242531;
+}
+.turn-actions .primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--gold), white 15%);
+}
+.variant.active,
+.opponent.is-turn {
+  border-color: var(--green);
+}
+:root
+  :is(
+    p,
+    .hint,
+    .eyebrow,
+    .variant small,
+    .table-meta,
+    .result-units span,
+    .result-units strong small,
+    .pair-values,
+    .history summary > span,
+    .opponent-heading > span,
+    .members small
+  ) {
+  color: var(--muted);
+}
+:root .my-table :is(p, .hint, .eyebrow),
+:root .empty-table :is(p, .eyebrow) {
+  color: #d6dfdf;
+}
+.variant strong,
+.pair-values b,
+h1 em {
+  color: var(--ink);
+}
+.connection {
+  background: var(--soft);
+  color: var(--ink);
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: var(--green);
+}
+.my-table button:focus-visible {
+  outline-color: var(--gold);
+}
+
+.suit-toggle {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.suit-toggle[aria-pressed='true'] {
+  background: var(--green);
+  color: var(--on-accent);
+}
+[data-suit-colours='four'] .card.suit-clubs {
+  color: #13723c;
+}
+[data-suit-colours='four'] .card.suit-diamonds {
+  color: #175ac5;
+}
+[data-suit-colours='four'] .card.suit-hearts {
+  color: #ba2936;
+}
+[data-suit-colours='four'] .card.suit-spades {
+  color: #20252d;
+}
+.lobby > .recent {
+  margin-bottom: 28px;
+}
+.turn-banner {
+  background: var(--green);
+  color: var(--on-accent);
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.my-table.is-turn,
+.opponent.is-turn {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+.opponent.is-turn .opponent-heading > span {
+  background: var(--green);
+  color: var(--on-accent);
+  border-radius: 6px;
+  padding: 8px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.my-table .pill.accent {
+  font-size: 15px;
+  font-weight: 700;
+}
+.playing :is(.my-table, .opponent) .card-corner {
+  font-size: 32px;
+  font-weight: 700;
+}
+.playing :is(.my-table, .opponent) .card-corner i {
+  font-size: 23px;
+}
+.playing :is(.my-table, .opponent) .card-suit {
+  font-size: 40px;
+}
+.playing .my-table .discard-zone .card-corner {
+  font-size: 18px;
+}
+.playing .my-table .discard-zone .card-corner i {
+  font-size: 13px;
+}
+.playing .my-table .discard-zone .card-suit {
+  font-size: 20px;
+}
+@media (max-width: 600px) {
+  .playing :is(.my-table, .opponent) .card-corner {
+    font-size: 24px;
+    top: 4px;
+    left: 4px;
+  }
+  .playing :is(.my-table, .opponent) .card-corner i {
+    font-size: 17px;
+  }
+  .playing :is(.my-table, .opponent) .card-suit {
+    font-size: 27px;
+    bottom: 4px;
+    right: 4px;
+  }
+  .opponent-heading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+.turn-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.turn-timer {
+  font-variant-numeric: tabular-nums;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+}
+.turn-timer.urgent {
+  background: #ffe1a1;
+  color: #642b0d;
+  border-color: #ffe1a1;
+}
+.timeout-notice {
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+
+.settings {
+  position: relative;
+}
+.settings > summary {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+}
+.settings[open] > summary {
+  margin-bottom: 0;
+}
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(280px, calc(100vw - 32px));
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px #0002;
+  z-index: 30;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+}
+.settings-panel .install-help {
+  position: static;
+  width: auto;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+@media (max-width: 600px) {
+  .settings-panel {
+    right: auto;
+    left: 0;
+  }
 }

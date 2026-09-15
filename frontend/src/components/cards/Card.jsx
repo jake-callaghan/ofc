@@ -17,6 +17,7 @@ export default function Card({
   const accessibleLabel = `${rankLabel} of ${suitName}${draftHint}`;
   const cardClass = [
     'card',
+    suitName && `suit-${suitName}`,
     red && 'red',
     selected && 'selected',
     draft && 'draft-card',

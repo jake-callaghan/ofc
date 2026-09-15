@@ -201,3 +201,33 @@ def test_invitation_endpoint_does_not_require_private_version(tmp_path):
             ).status_code
             == 401
         )
+
+
+def test_leave_preserves_history_and_transfers_ownership(tmp_path):
+    from ofc.rules import RuleError
+
+    store, gid, a, b = setup_store(tmp_path)
+    store.command(gid, a, "start", 1, {"type": "start", "players": [a, b]})
+    with pytest.raises(RuleError, match="between hands"):
+        store.command(gid, a, "early-leave", 2, {"type": "leave"})
+    while True:
+        with store.repository.transaction() as uow:
+            state = uow.get_game(gid).state
+        if state["hand"]["status"] == "complete":
+            break
+        actor, command = auto_command(state)
+        store.command(gid, actor, str(uuid4()), state["version"], command)
+    before = store.get(gid, b)
+    result = store.command(gid, a, "leave", before["version"], {"type": "leave"})
+    assert result["state"] is None
+    assert (
+        store.command(gid, a, "leave", before["version"], {"type": "leave"}) == result
+    )
+    after = store.get(gid, b)
+    assert after["members"] == [b]
+    assert after["owner"] == b
+    assert after["balances"] == before["balances"]
+    assert after["player_names"][a] == "alice"
+    assert len(store.history(gid, b)) == 1
+    with pytest.raises(RuleError, match="not a member"):
+        store.get(gid, a)

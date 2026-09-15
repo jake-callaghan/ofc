@@ -36,9 +36,16 @@ export default function TableSidebar({
   }
 
   const names = game.player_names;
-  const canStart = !hand || hand.status === 'complete';
+  const canStart =
+    game.status !== 'complete' && (!hand || hand.status === 'complete');
   return (
     <aside className="table-sidebar">
+      {game.status === 'complete' && (
+        <section className="panel">
+          <h2>Game complete</h2>
+          <p>Orbit limit reached. Final scores are shown above.</p>
+        </section>
+      )}
       {canStart && (
         <section className="panel seating">
           <h3>Players</h3>

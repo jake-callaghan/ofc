@@ -6,6 +6,9 @@ const themes = {
   ocean: 'Ocean',
   plum: 'Plum',
   slate: 'Slate',
+  sunset: 'Sunset',
+  midnight: 'Midnight',
+  casino: 'Casino',
 };
 
 export default function ThemePicker() {
@@ -22,7 +25,7 @@ export default function ThemePicker() {
       ?.setAttribute(
         'content',
         getComputedStyle(document.documentElement)
-          .getPropertyValue('--green')
+          .getPropertyValue('--felt')
           .trim(),
       );
   }, [theme]);

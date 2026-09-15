@@ -131,3 +131,33 @@ def test_sitting_out_preserves_fantasy():
         actor, command = auto_command(state)
         state = transition(state, actor, command)
     assert state["fantasy"]["c"] == 17
+
+
+@pytest.mark.parametrize("variant,count", [("pineapple", 3), ("classic", 4)])
+def test_opening_draws_visible_privately_and_not_redealt(variant, count):
+    state = game(Rules(variant=variant, fantasyland="standard"), count)
+    start_hand(state, "a", state["members"], DECK)
+    opening = deepcopy(state["hand"]["draws"])
+    assert all(len(cards) == 5 for cards in opening.values())
+    assert len({card for cards in opening.values() for card in cards}) == count * 5
+    for player in state["members"]:
+        assert public_view(state, player)["hand"]["draws"] == {player: opening[player]}
+    first, command = auto_command(state)
+    other = next(p for p in state["members"] if p != first)
+    with pytest.raises(RuleError, match="not your turn"):
+        transition(state, other, command)
+    for _ in range(count):
+        actor, command = auto_command(state)
+        assert state["hand"]["draws"][actor] == opening[actor]
+        state = transition(state, actor, command)
+
+
+def test_last_human_can_leave_and_rejoin_cpu_table():
+    state = game(count=2)
+    state["cpu_players"] = ["b"]
+    state = transition(state, "a", {"type": "leave"})
+    assert state["members"] == ["b"]
+    assert state["owner"] is None
+    state = transition(state, "c", {"type": "join"})
+    assert state["owner"] == "c"
+    start_hand(state, "c", ["b", "c"], DECK)

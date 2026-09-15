@@ -1,9 +1,3 @@
 export default function Footer() {
-  return (
-    <footer>
-      <span>♠ OPEN FACE</span>
-      <span>Play the hand. Enjoy the company.</span>
-      <span>NO RUSH. NEXT HAND’S WAITING.</span>
-    </footer>
-  );
+  return <footer className="copyright">© 2026 Jake Callaghan</footer>;
 }

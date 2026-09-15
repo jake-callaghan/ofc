@@ -12,6 +12,8 @@ export default function Lobby({ session, openGame, pendingJoin }) {
     fantasyland: 'progressive',
     moon: true,
     candyland: false,
+    turn_seconds: null,
+    orbits: null,
   });
   const [link, setLink] = useState(pendingJoin || '');
   const [busy, setBusy] = useState(false);
@@ -66,6 +68,25 @@ export default function Lobby({ session, openGame, pendingJoin }) {
       <div className="page-intro">
         <h1>Tables</h1>
       </div>
+      <section className="panel recent">
+        <h2>Your tables</h2>
+        {saved.length ? (
+          saved.map((table) => (
+            <button
+              className="saved-table"
+              key={table.id}
+              onClick={() => openGame(table.id, table.name)}
+            >
+              <span>
+                <strong>{table.name}</strong>
+              </span>
+              <span>↗</span>
+            </button>
+          ))
+        ) : (
+          <p className="empty">No saved tables.</p>
+        )}
+      </section>
       <div className="lobby-grid">
         <section className="panel setup">
           <div
@@ -145,6 +166,58 @@ export default function Lobby({ session, openGame, pendingJoin }) {
                     <option value="off">Off</option>
                   </select>
                 </label>
+                <label>
+                  Orbits
+                  <select
+                    value={rules.orbits ?? ''}
+                    onChange={(event) =>
+                      setRules({
+                        ...rules,
+                        orbits: event.target.value
+                          ? Number(event.target.value)
+                          : null,
+                      })
+                    }
+                  >
+                    <option value="">Unlimited</option>
+                    {[1, 2, 3, 5, 10].map((count) => (
+                      <option
+                        key={count}
+                        value={count}
+                      >
+                        {count}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="hint">
+                  One hand per starting player per orbit. Fantasyland hands are
+                  extra.
+                </p>
+                <label>
+                  Turn timer
+                  <select
+                    value={rules.turn_seconds ?? ''}
+                    onChange={(event) =>
+                      setRules({
+                        ...rules,
+                        turn_seconds: event.target.value
+                          ? Number(event.target.value)
+                          : null,
+                      })
+                    }
+                  >
+                    <option value="">Off</option>
+                    <option value="15">15 seconds</option>
+                    <option value="30">30 seconds</option>
+                    <option value="60">1 minute</option>
+                    <option value="120">2 minutes</option>
+                    <option value="300">5 minutes</option>
+                  </select>
+                </label>
+                <p className="hint">
+                  Random placement when time runs out. Fantasyland is untimed.
+                </p>
                 <details open>
                   <summary>
                     House rules <span>Optional</span>
@@ -213,25 +286,6 @@ export default function Lobby({ session, openGame, pendingJoin }) {
           </form>
         </section>
         <aside>
-          <section className="panel recent">
-            <h2>Your tables</h2>
-            {saved.length ? (
-              saved.map((table) => (
-                <button
-                  className="saved-table"
-                  key={table.id}
-                  onClick={() => openGame(table.id, table.name)}
-                >
-                  <span>
-                    <strong>{table.name}</strong>
-                  </span>
-                  <span>↗</span>
-                </button>
-              ))
-            ) : (
-              <p className="empty">No saved tables.</p>
-            )}
-          </section>
           <details className="player-settings">
             <summary>Player key</summary>
             <button

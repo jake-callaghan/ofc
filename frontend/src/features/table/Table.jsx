@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { readSaved, save } from '../../lib/storage.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 import { useGame } from './useGame.js';
 import History from './History.jsx';
 import TableSidebar from './TableSidebar.jsx';
 import TableHand from './TableHand.jsx';
+import TurnTimer from './TurnTimer.jsx';
 import HeaderScores from './HeaderScores.jsx';
 export default function Table({ id, session, home }) {
   const { game, connection, error, busy, command } = useGame(id, session.token);
@@ -22,6 +24,16 @@ export default function Table({ id, session, home }) {
         </button>
       </main>
     );
+  async function leaveTable() {
+    if (await command({ type: 'leave' })) {
+      const key = `ofc.tables.${session.player_id}`;
+      save(
+        key,
+        readSaved(key, []).filter((table) => table.id !== id),
+      );
+      home();
+    }
+  }
   const hand = game.hand;
   const completedHands =
     game.hand_number - (hand?.status === 'playing' ? 1 : 0);
@@ -53,6 +65,17 @@ export default function Table({ id, session, home }) {
           <div className="table-subtitle">
             <span className="variant-name">{game.rules.variant}</span>
             <span>{fantasyLabel}</span>
+            {game.rules.orbits && (
+              <span>
+                {game.orbit_size
+                  ? `${game.normal_hands || 0}/${game.orbit_size * game.rules.orbits} ordinary hands`
+                  : `${game.rules.orbits} ${game.rules.orbits === 1 ? 'orbit' : 'orbits'}`}
+                {game.status === 'complete' ? ' · Complete' : ''}
+              </span>
+            )}
+            {game.rules.turn_seconds && (
+              <span>{game.rules.turn_seconds}s turns</span>
+            )}
             <span>
               {game.rules.moon ? 'Moon · ' : ''}
               {game.rules.candyland ? 'Candyland · ' : ''}Units
@@ -60,6 +83,18 @@ export default function Table({ id, session, home }) {
           </div>
         </div>
         <div className="table-heading-right">
+          <button
+            className="secondary"
+            disabled={busy || hand?.status === 'playing'}
+            title={
+              hand?.status === 'playing'
+                ? 'You can leave between hands'
+                : 'Remove yourself from this table'
+            }
+            onClick={leaveTable}
+          >
+            Leave table
+          </button>
           <HeaderScores
             game={game}
             playerId={session.player_id}
@@ -74,6 +109,23 @@ export default function Table({ id, session, home }) {
         </div>
       </div>
       <ErrorMessage message={error} />
+      {hand?.turn && (
+        <div className="turn-banner">
+          {hand.turn.player === session.player_id
+            ? 'Your turn to play'
+            : `${game.player_names[hand.turn.player]} is playing`}
+          <TurnTimer game={game} />
+        </div>
+      )}
+      {hand?.last_timeout && (
+        <p
+          className="timeout-notice"
+          role="status"
+        >
+          {game.player_names[hand.last_timeout.player]}'s timer expired — cards
+          were placed randomly.
+        </p>
+      )}
       <div className="table-layout">
         <div className="table-main">
           <nav className="tabs">

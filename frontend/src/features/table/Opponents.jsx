@@ -17,7 +17,7 @@ export default function Opponents({ hand, names, playerId }) {
               </strong>
               <span>
                 {hand.turn?.player === p
-                  ? '● Thinking'
+                  ? 'Your opponent is playing'
                   : hand.fantasy[p]
                     ? '✦ Fantasyland'
                     : 'At the table'}

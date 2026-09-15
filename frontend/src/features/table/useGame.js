@@ -8,10 +8,15 @@ export function useGame(id, token) {
   const [busy, setBusy] = useState(false);
   const current = useRef(null);
   const pending = useRef(null);
-  const accept = useCallback((state) => {
+  const accept = useCallback((state, serverTime) => {
     if (current.current && state.version < current.current.version) return;
-    current.current = state;
-    setGame(state);
+    const clockOffset =
+      typeof serverTime === 'number'
+        ? serverTime * 1000 - Date.now()
+        : current.current?.clockOffset || 0;
+    const snapshot = { ...state, clockOffset };
+    current.current = snapshot;
+    setGame(snapshot);
   }, []);
 
   useEffect(() => {
@@ -35,7 +40,7 @@ export function useGame(id, token) {
         try {
           const message = JSON.parse(event.data);
           if (message.type === 'snapshot') {
-            accept(message.state);
+            accept(message.state, message.server_time);
             attempts = 0;
             setConnection('live');
           }
@@ -93,7 +98,7 @@ export function useGame(id, token) {
         token,
         pending.current.body,
       );
-      accept(result.state);
+      if (result.state) accept(result.state);
       pending.current = null;
       return true;
     } catch (e) {
