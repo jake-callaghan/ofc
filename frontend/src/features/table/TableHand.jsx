@@ -23,7 +23,6 @@ export default function TableHand({
 
   return (
     <>
-
       {isComplete && <HandResults game={game} />}
 
       <div className="hand-boards">

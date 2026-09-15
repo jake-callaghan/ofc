@@ -6,6 +6,7 @@ import {
   capacity,
   emptyBoard,
   placement,
+  proposeDiscards,
 } from '../src/lib/game.js';
 
 test('a complete pineapple turn requires two placements and one discard', () => {
@@ -69,4 +70,31 @@ test('variant capacity and share links', () => {
     data,
   );
   assert.throws(() => invitation('http://localhost/#join=bad'));
+});
+
+test('the remaining pineapple card becomes a reversible proposed discard', () => {
+  const draw = ['Ac', 'Kd', '2h'];
+  const draft = { Ac: 'bottom', Kd: 'middle' };
+  const proposed = proposeDiscards(draw, draft, 2);
+  assert.equal(proposed['2h'], 'discard');
+  assert.deepEqual(placement(draw, proposed, 2, emptyBoard()).discards, ['2h']);
+  assert.deepEqual(draft, { Ac: 'bottom', Kd: 'middle' });
+  assert.deepEqual(proposeDiscards(draw, { Ac: 'bottom' }, 2), {
+    Ac: 'bottom',
+  });
+});
+
+test('fantasyland proposes every remainder only once thirteen cards are placed', () => {
+  const draw = Array.from({ length: 17 }, (_, i) => `c${i}`);
+  const draft = Object.fromEntries(
+    draw
+      .slice(0, 13)
+      .map((card, i) => [card, i < 3 ? 'top' : i < 8 ? 'middle' : 'bottom']),
+  );
+  assert.equal(
+    placement(draw, proposeDiscards(draw, draft, 13), 13, emptyBoard()).discards
+      .length,
+    4,
+  );
+  assert.deepEqual(proposeDiscards(['Ac'], {}, 1), {});
 });

@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { assignCard, emptyBoard, placement, proposeDiscards } from '../../lib/game.js';
+import {
+  assignCard,
+  emptyBoard,
+  placement,
+  proposeDiscards,
+} from '../../lib/game.js';
 import Card from '../../components/cards/Card.jsx';
 import Board from '../../components/cards/Board.jsx';
 export default function TurnEditor({
@@ -33,7 +38,9 @@ export default function TurnEditor({
   const committed = Object.values(board).flat().length;
   const canEdit = !busy && connected;
   const unassignedCards = draw.filter((card) => !proposedDraft[card]);
-  const discardedCards = draw.filter((card) => proposedDraft[card] === 'discard');
+  const discardedCards = draw.filter(
+    (card) => proposedDraft[card] === 'discard',
+  );
   const discardCount = draw.length - keep;
   const waitingMessage =
     hand.status === 'complete'
@@ -95,7 +102,9 @@ export default function TurnEditor({
           {discardedCards.length > 0 && (
             <div className="discard-zone">
               <span className="discard-label">
-                {discardedCards.length === 1 ? 'Proposed discard' : 'Proposed discards'}
+                {discardedCards.length === 1
+                  ? 'Proposed discard'
+                  : 'Proposed discards'}
               </span>
               {discardedCards.map((card) => (
                 <Card
@@ -105,7 +114,11 @@ export default function TurnEditor({
                   key={card}
                   selected={selected === card}
                   ariaLabel={`${card}, proposed discard; select to place instead`}
-                  onClick={canEdit ? () => setSelected(selected === card ? null : card) : undefined}
+                  onClick={
+                    canEdit
+                      ? () => setSelected(selected === card ? null : card)
+                      : undefined
+                  }
                 />
               ))}
             </div>

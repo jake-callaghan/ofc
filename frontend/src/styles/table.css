@@ -265,7 +265,21 @@
   gap: 4px 10px;
   font-size: 13px;
 }
-.header-score strong { font-size: 20px; font-variant-numeric: tabular-nums; }
-.header-score small { margin-left: 5px; font-size: 10px; color: var(--muted); }
-.header-score .fantasy-badge { grid-column: 1 / -1; text-align: right; color: #967937; }
-.discard-label { font-size: 11px; color: #bdcaaa; }
+.header-score strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.header-score small {
+  margin-left: 5px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.header-score .fantasy-badge {
+  grid-column: 1 / -1;
+  text-align: right;
+  color: #967937;
+}
+.discard-label {
+  font-size: 11px;
+  color: #bdcaaa;
+}

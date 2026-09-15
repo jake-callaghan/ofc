@@ -43,5 +43,7 @@ export function proposeDiscards(draw, draft, keep) {
   if (placed !== keep) return draft;
 
   // proposals are derived, so returning a placed card clears them immediately.
-  return Object.fromEntries(draw.map((card) => [card, draft[card] || 'discard']));
+  return Object.fromEntries(
+    draw.map((card) => [card, draft[card] || 'discard']),
+  );
 }

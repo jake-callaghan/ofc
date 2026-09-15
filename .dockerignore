@@ -1,0 +1,15 @@
+.git
+.history
+.pnpm-store
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/dist
+**/data
+**/*.sqlite3*
+**/.env
+**/.env.*
+work
+ofc

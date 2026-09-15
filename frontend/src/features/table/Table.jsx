@@ -60,14 +60,17 @@ export default function Table({ id, session, home }) {
           </div>
         </div>
         <div className="table-heading-right">
-          <HeaderScores game={game} playerId={session.player_id} />
-        <span
-          className={`connection ${connection}`}
-          role="status"
-        >
-          <i />
-          {connectionLabel}
-        </span>
+          <HeaderScores
+            game={game}
+            playerId={session.player_id}
+          />
+          <span
+            className={`connection ${connection}`}
+            role="status"
+          >
+            <i />
+            {connectionLabel}
+          </span>
         </div>
       </div>
       <ErrorMessage message={error} />

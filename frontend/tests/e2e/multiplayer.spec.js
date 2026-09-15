@@ -70,7 +70,7 @@ test('two players join, place a complete pineapple hand, and reconnect', async (
     expect(own.hand.deck).toBeUndefined();
     const keep = own.hand.turn.keep;
     const board = structuredClone(own.hand.boards[id]);
-    for (let card = 0; card < own.hand.draws[id].length; card++) {
+    for (let card = 0; card < keep; card++) {
       await page.locator('.draw-cards .card').first().click();
       if (card < keep) {
         const row = Object.keys(board).find(
@@ -85,10 +85,7 @@ test('two players join, place a complete pineapple hand, and reconnect', async (
           .first()
           .click();
         board[row].push('placed');
-      } else
-        await page
-          .getByRole('button', { name: 'Discard selected card' })
-          .click();
+      }
     }
     if (turn === 0) {
       await page.screenshot({

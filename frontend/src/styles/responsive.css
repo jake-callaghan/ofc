@@ -255,8 +255,17 @@
 }
 
 @media (max-width: 780px) {
-  .table-title { flex-wrap: wrap; }
-  .table-heading-right { margin-left: auto; max-width: 100%; }
-  .table-heading-right .connection { margin-top: 0; }
-  .header-scores { gap: 10px 16px; }
+  .table-title {
+    flex-wrap: wrap;
+  }
+  .table-heading-right {
+    margin-left: auto;
+    max-width: 100%;
+  }
+  .table-heading-right .connection {
+    margin-top: 0;
+  }
+  .header-scores {
+    gap: 10px 16px;
+  }
 }

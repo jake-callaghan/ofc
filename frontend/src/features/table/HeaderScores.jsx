@@ -6,12 +6,16 @@ export default function HeaderScores({ game, playerId }) {
   );
 
   return (
-    <div className="header-scores" aria-label="Running scores in units">
+    <div
+      className="header-scores"
+      aria-label="Running scores in units"
+    >
       {players.map((id) => (
-        <div className="header-score" key={id}>
-          <span>
-            {game.player_names[id]}
-          </span>
+        <div
+          className="header-score"
+          key={id}
+        >
+          <span>{game.player_names[id]}</span>
           <strong className={game.balances[id] < 0 ? 'negative' : ''}>
             {units(game.balances[id])}
           </strong>

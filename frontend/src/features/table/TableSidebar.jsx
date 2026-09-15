@@ -39,7 +39,6 @@ export default function TableSidebar({
   const canStart = !hand || hand.status === 'complete';
   return (
     <aside className="table-sidebar">
-
       {canStart && (
         <section className="panel seating">
           <h3>Players</h3>
