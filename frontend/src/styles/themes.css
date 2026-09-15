@@ -1,0 +1,79 @@
+:root {
+  --page: #f7f6f0;
+  --surface: #fffef9;
+  --soft: #ecefe5;
+  --ink: #253a32;
+}
+:root[data-theme='ocean'] {
+  --green: #19465e;
+  --page: #f0f5f8;
+  --surface: #fbfdff;
+  --soft: #e2edf3;
+  --ink: #243c4b;
+  --line: #ccdae3;
+  --muted: #637b89;
+}
+:root[data-theme='plum'] {
+  --green: #563450;
+  --page: #f7f1f5;
+  --surface: #fffbfe;
+  --soft: #eee2eb;
+  --ink: #493344;
+  --line: #e0cfdb;
+  --muted: #82697b;
+}
+:root[data-theme='slate'] {
+  --green: #343e50;
+  --page: #f1f3f6;
+  --surface: #fcfdff;
+  --soft: #e3e7ee;
+  --ink: #303b4b;
+  --line: #cfd6e0;
+  --muted: #6c788b;
+}
+:root {
+  background: var(--page);
+  color: var(--ink);
+}
+.panel,
+.variant,
+input:not([type='checkbox']):not([type='file']),
+select,
+textarea {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.opponent,
+.variant.active,
+.avatar,
+.secondary:hover:not(:disabled) {
+  background: var(--soft);
+  border-color: var(--line);
+}
+.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--green), white 10%);
+}
+.header {
+  height: auto;
+  min-height: 98px;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.brand {
+  font-size: clamp(18px, 2.5vw, 27px);
+  letter-spacing: -0.6px;
+  text-align: left;
+}
+.header-right {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+select.theme-picker {
+  width: auto;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+}

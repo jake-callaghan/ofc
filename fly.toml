@@ -1,5 +1,4 @@
-# replace with your globally unique fly app name before deploying.
-app = "replace-with-your-ofc-app"
+app = "ofc"
 primary_region = "lhr"
 
 [build]

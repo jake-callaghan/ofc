@@ -10,7 +10,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
   const [rules, setRules] = useState({
     variant: 'pineapple',
     fantasyland: 'progressive',
-    moon: false,
+    moon: true,
     candyland: false,
   });
   const [link, setLink] = useState(pendingJoin || '');
@@ -145,7 +145,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
                     <option value="off">Off</option>
                   </select>
                 </label>
-                <details>
+                <details open>
                   <summary>
                     House rules <span>Optional</span>
                   </summary>
