@@ -1,21 +1,30 @@
-# Open Face Chinese Poker
+# Open Face Chinese Poker http://ofcpoker.live
 
 Multiplayer OFC with Pineapple, Fantasyland, house-rule royalties and CPU practice. React frontend, Python/FastAPI backend, scores in units.
 
 - [Backend](server/README.md)
 - [Frontend](frontend/README.md)
 
+## Gameplay
+
+![alt text](gameplay.gif)
+
 ## Development
 
 Requires Python 3.13+, uv, Node 22.12+ and pnpm. Commands run from the repository root.
 
-Start both servers:
+Backend:
 
 ```sh
-./dev.sh
+uv run --directory server uvicorn ofc.api:app --reload
 ```
 
-Installs locked dependencies and starts both servers with live reload. Ctrl+C stops both. Uses the local SQLite database in `server/data/` by default.
+Frontend, in a second terminal:
+
+```sh
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend dev
+```
 
 Frontend: http://localhost:5173 · API docs: http://localhost:8000/docs
 
