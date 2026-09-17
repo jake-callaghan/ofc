@@ -3,10 +3,14 @@ import { api } from '../../lib/api.js';
 import { capacity } from '../../lib/game.js';
 import { readSaved, save } from '../../lib/storage.js';
 import { invitation } from '../../lib/navigation.js';
+import { randomTableName } from '../../lib/tableName.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
+import ActionButton, {
+  HoverButton,
+} from '../../components/ui/ActionButton.jsx';
 export default function Lobby({ session, openGame, pendingJoin }) {
   const [mode, setMode] = useState(pendingJoin ? 'join' : 'create');
-  const [name, setName] = useState('The weekly game');
+  const [name, setName] = useState(() => randomTableName(session.name));
   const [rules, setRules] = useState({
     variant: 'pineapple',
     fantasyland: 'progressive',
@@ -53,26 +57,16 @@ export default function Lobby({ session, openGame, pendingJoin }) {
       setBusy(false);
     }
   }
-  function backup() {
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(session)], { type: 'application/json' }),
-    );
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'open-face-player-key.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
   return (
     <main className="lobby">
       <div className="page-intro">
-        <h1>Tables</h1>
+        <h1>Lobby</h1>
       </div>
       <section className="panel recent">
         <h2>Your tables</h2>
         {saved.length ? (
           saved.map((table) => (
-            <button
+            <HoverButton
               className="saved-table"
               key={table.id}
               onClick={() => openGame(table.id, table.name)}
@@ -80,8 +74,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
               <span>
                 <strong>{table.name}</strong>
               </span>
-              <span>↗</span>
-            </button>
+            </HoverButton>
           ))
         ) : (
           <p className="empty">No saved tables.</p>
@@ -90,7 +83,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
       <div className="lobby-grid">
         <section className="panel setup">
           <div
-            className="tabs"
+            className="tabs setup-tabs"
             role="tablist"
             aria-label="Table setup"
           >
@@ -207,7 +200,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
                       })
                     }
                   >
-                    <option value="">Off</option>
+                    {/* <option value="">Off</option> */}
                     <option value="15">15 seconds</option>
                     <option value="30">30 seconds</option>
                     <option value="60">1 minute</option>
@@ -236,25 +229,9 @@ export default function Lobby({ session, openGame, pendingJoin }) {
                     Valid J-high bottom: 20 units per opponent, replacing
                     ordinary scoring.
                   </p>
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={rules.candyland}
-                      disabled={rules.fantasyland === 'off'}
-                      onChange={(e) =>
-                        setRules({ ...rules, candyland: e.target.checked })
-                      }
-                    />
-                    Candyland
-                  </label>
-                  <p className="hint">
-                    Three flushes: scoop + middle/bottom royalties and 15-card
-                    Fantasyland. These are house-rule presets.
-                  </p>
                 </details>
                 <div className="table-meta">
                   <span>2–{capacity(rules)} active players</span>
-
                   <span>Units</span>
                 </div>
               </>
@@ -273,32 +250,15 @@ export default function Lobby({ session, openGame, pendingJoin }) {
               </>
             )}
             <ErrorMessage message={error} />
-            <button
-              className="primary"
-              disabled={busy}
-            >
+            <ActionButton disabled={busy}>
               {busy
                 ? 'Just a moment…'
                 : mode === 'create'
                   ? 'Create table →'
                   : 'Join table →'}
-            </button>
+            </ActionButton>
           </form>
         </section>
-        <aside>
-          <details className="player-settings">
-            <summary>Player key</summary>
-            <button
-              className="text-button"
-              onClick={backup}
-            >
-              Download player key
-            </button>
-            <p className="hint">
-              Keep it private. Use it to restore your player in another browser.
-            </p>
-          </details>
-        </aside>
       </div>
     </main>
   );

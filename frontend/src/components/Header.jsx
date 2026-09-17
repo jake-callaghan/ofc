@@ -16,7 +16,7 @@ export default function Header({ session, home }) {
         {brand}
       </button>
       <div className="header-right">
-        <Settings />
+        <Settings session={session} />
         {session && (
           <span className="identity">
             <span className="avatar">

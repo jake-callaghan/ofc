@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import FantasylandCelebration from './FantasylandCelebration.jsx';
 import useTurnTimer from './useTurnTimer.js';
 import {
   assignCard,
@@ -8,6 +9,7 @@ import {
 } from '../../lib/game.js';
 import Card from '../../components/cards/Card.jsx';
 import Board from '../../components/cards/Board.jsx';
+import ActionButton from '../../components/ui/ActionButton.jsx';
 export default function TurnEditor({
   game,
   session,
@@ -79,14 +81,19 @@ export default function TurnEditor({
               : 'Waiting'}
         </span>
       </div>
-      <Board
-        board={board}
-        draft={draft}
-        selected={selected}
-        editable={draw.length > 0 && canEdit}
-        move={move}
-        remove={remove}
-      />
+      <div className="celebration-board">
+        {hand.status === 'complete' && game.fantasy[session.player_id] > 0 && (
+          <FantasylandCelebration key={hand.number} />
+        )}
+        <Board
+          board={board}
+          draft={draft}
+          selected={selected}
+          editable={draw.length > 0 && canEdit}
+          move={move}
+          remove={remove}
+        />
+      </div>
       {draw.length > 0 ? (
         <div className="draw-area">
           <div className="draw-heading">
@@ -154,8 +161,7 @@ export default function TurnEditor({
             >
               Reset placement
             </button>
-            <button
-              className="primary"
+            <ActionButton
               disabled={!myTurn || timedOut || !value || busy || !connected}
               onClick={() => command(value)}
             >
@@ -164,7 +170,7 @@ export default function TurnEditor({
                 : myTurn
                   ? 'Confirm placement →'
                   : 'Waiting for your turn'}
-            </button>
+            </ActionButton>
           </div>
         </div>
       ) : (

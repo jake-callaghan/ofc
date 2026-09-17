@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import InstallApp from './InstallApp.jsx';
 import SuitColours from './SuitColours.jsx';
 import ThemePicker from './ThemePicker.jsx';
+import BackgroundMotion from './BackgroundMotion.jsx';
 
-export default function Settings() {
+export default function Settings({ session }) {
   const menu = useRef(null);
 
   useEffect(() => {
@@ -24,6 +25,17 @@ export default function Settings() {
     };
   }, []);
 
+  function backup() {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(session)], { type: 'application/json' }),
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'open-face-player-key.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <details
       className="settings"
@@ -31,12 +43,22 @@ export default function Settings() {
     >
       <summary>Settings</summary>
       <div className="settings-panel">
+        <div className="settings-heading">Preferences</div>
         <div className="settings-row">
           <span>Theme</span>
           <ThemePicker />
         </div>
+        <BackgroundMotion />
         <SuitColours />
         <InstallApp />
+        {session && (
+          <button
+            className="text-button player-key-download"
+            onClick={backup}
+          >
+            Download player key
+          </button>
+        )}
       </div>
     </details>
   );
