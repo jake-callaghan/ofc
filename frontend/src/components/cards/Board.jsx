@@ -21,6 +21,7 @@ export default function Board({
         return (
           <div
             className="board-row"
+            data-drop-row={editable && !hidden && slots > 0 ? row : undefined}
             key={row}
           >
             <div className="row-label">
@@ -41,6 +42,7 @@ export default function Board({
                   small={compact}
                   draft
                   onClick={editable ? () => remove(card) : undefined}
+                  onDrop={editable ? (row) => move(row, card) : undefined}
                 />
               ))}
               {Array.from({ length: slots }, (_, i) => (
