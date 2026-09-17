@@ -1,0 +1,70 @@
+.celebration-board {
+  position: relative;
+}
+.celebration-board:has(.fantasyland-celebration) {
+  padding-top: 62px;
+}
+.fantasyland-celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 16px;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  padding-top: 6px;
+}
+.fantasyland-celebration strong {
+  position: relative;
+  padding: 9px 18px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: var(--felt);
+  color: var(--gold);
+  font-size: clamp(18px, 2.5vw, 26px);
+  box-shadow: 0 4px 24px #0004;
+  animation: fantasyland-arrive 450ms ease-out both;
+}
+.fantasyland-confetti {
+  position: absolute;
+  inset: 0;
+}
+.fantasyland-confetti i {
+  position: absolute;
+  left: var(--x);
+  top: -12px;
+  width: 6px;
+  height: 10px;
+  background: var(--confetti-colour);
+  animation: fantasyland-confetti 2.8s var(--delay) linear infinite both;
+}
+@keyframes fantasyland-confetti {
+  from {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(350px) rotate(var(--spin));
+    opacity: 0;
+  }
+}
+@keyframes fantasyland-arrive {
+  from {
+    transform: translateY(6px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fantasyland-confetti {
+    display: none;
+  }
+  .fantasyland-celebration strong {
+    animation: none;
+  }
+}

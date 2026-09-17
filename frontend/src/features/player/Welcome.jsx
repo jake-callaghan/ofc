@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../../lib/api.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
+import ActionButton from '../../components/ui/ActionButton.jsx';
 export default function Welcome({ onSession }) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -53,12 +54,9 @@ export default function Welcome({ onSession }) {
           />
         </label>
         <ErrorMessage message={error} />
-        <button
-          className="primary"
-          disabled={busy || !name.trim()}
-        >
+        <ActionButton disabled={busy || !name.trim()}>
           {busy ? 'Creating player…' : 'Continue'}
-        </button>
+        </ActionButton>
         <label className="restore">
           Restore player key
           <input

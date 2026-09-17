@@ -2,23 +2,21 @@ import { useEffect, useState } from 'react';
 import { readSaved, save } from '../lib/storage.js';
 
 const themes = {
-  forest: 'Forest',
-  ocean: 'Ocean',
-  plum: 'Plum',
-  slate: 'Slate',
-  sunset: 'Sunset',
-  midnight: 'Midnight',
-  casino: 'Casino',
+  ocean: { label: 'Ocean', background: 'waves' },
+  slate: { label: 'Slate', background: 'shapes' },
+  midnight: { label: 'Midnight', background: 'dots' },
+  casino: { label: 'Casino', background: 'shapes' },
 };
 
 export default function ThemePicker() {
   const [theme, setTheme] = useState(() => {
-    const saved = readSaved('ofc.theme', 'forest');
-    return Object.hasOwn(themes, saved) ? saved : 'forest';
+    const saved = readSaved('ofc.theme', 'casino');
+    return Object.hasOwn(themes, saved) ? saved : 'casino';
   });
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.background = themes[theme].background;
     save('ofc.theme', theme);
     document
       .querySelector('meta[name="theme-color"]')
@@ -37,7 +35,7 @@ export default function ThemePicker() {
       value={theme}
       onChange={(event) => setTheme(event.target.value)}
     >
-      {Object.entries(themes).map(([value, label]) => (
+      {Object.entries(themes).map(([value, { label }]) => (
         <option
           key={value}
           value={value}

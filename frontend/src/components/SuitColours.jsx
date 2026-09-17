@@ -13,11 +13,18 @@ export default function SuitColours() {
 
   return (
     <button
-      className="suit-toggle secondary"
-      aria-pressed={fourColours}
+      className="suit-switch"
+      role="switch"
+      aria-checked={fourColours}
       onClick={() => setFourColours(!fourColours)}
     >
-      Four-colour suits
+      <span>Four-colour suits</span>
+      <span
+        className="switch-track"
+        aria-hidden="true"
+      >
+        <span />
+      </span>
     </button>
   );
 }
