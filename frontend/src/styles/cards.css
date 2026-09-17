@@ -153,3 +153,52 @@
 .compact.board {
   gap: 7px;
 }
+
+.draggable-card {
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+.card.dragging {
+  position: relative;
+  z-index: 100;
+  pointer-events: none;
+  cursor: grabbing;
+  transition: none;
+  box-shadow: 0 16px 28px #0005;
+}
+.board-row {
+  border-radius: 8px;
+  transition:
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+.board-row.drop-hover {
+  background: #ffffff18;
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.board .draft-card {
+  animation: card-place 180ms ease-out;
+}
+@keyframes card-place {
+  from {
+    opacity: 0.65;
+    transform: translateY(-12px) scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .draggable-card,
+  .board-row {
+    transition: none;
+  }
+  .board .draft-card {
+    animation: none;
+  }
+}

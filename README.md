@@ -9,18 +9,13 @@ Multiplayer OFC with Pineapple, Fantasyland, house-rule royalties and CPU practi
 
 Requires Python 3.13+, uv, Node 22.12+ and pnpm. Commands run from the repository root.
 
-Backend:
+Start both servers:
 
 ```sh
-uv run --directory server uvicorn ofc.api:app --reload
+./dev.sh
 ```
 
-Frontend, in a second terminal:
-
-```sh
-pnpm --dir frontend install --frozen-lockfile
-pnpm --dir frontend dev
-```
+Installs locked dependencies and starts both servers with live reload. Ctrl+C stops both. Uses the local SQLite database in `server/data/` by default.
 
 Frontend: http://localhost:5173 · API docs: http://localhost:8000/docs
 

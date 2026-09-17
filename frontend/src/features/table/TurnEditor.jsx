@@ -30,9 +30,16 @@ export default function TurnEditor({
       : 5;
   const proposedDraft = proposeDiscards(draw, draft, keep);
   const value = placement(draw, proposedDraft, keep, board);
-  const move = (row) => {
-    if (!selected) return;
-    const next = assignCard(draft, selected, row, board);
+  const move = (row, card = selected) => {
+    if (
+      !card ||
+      !draw.includes(card) ||
+      busy ||
+      !connected ||
+      (myTurn && timedOut)
+    )
+      return;
+    const next = assignCard(draft, card, row, board);
     if (next !== draft) {
       setDraft(next);
       setSelected(null);
@@ -42,7 +49,7 @@ export default function TurnEditor({
     setDraft(assignCard(draft, card, null, board));
     setSelected(card);
   };
-  const canEdit = !busy && connected;
+  const canEdit = !busy && connected && !(myTurn && timedOut);
   const unassignedCards = draw.filter((card) => !proposedDraft[card]);
   const discardedCards = draw.filter(
     (card) => proposedDraft[card] === 'discard',
@@ -93,7 +100,7 @@ export default function TurnEditor({
           </div>
           <p className="hint">
             {myTurn
-              ? 'Select a card, then a row.'
+              ? 'Drag a card to a row, or click to place.'
               : 'Arrange your cards while you wait for your turn.'}
           </p>
           <div className="draw-cards">
@@ -102,6 +109,7 @@ export default function TurnEditor({
                 key={card}
                 card={card}
                 selected={selected === card}
+                onDrop={canEdit ? (row) => move(row, card) : undefined}
                 onClick={
                   canEdit
                     ? () => setSelected(selected === card ? null : card)
@@ -127,6 +135,7 @@ export default function TurnEditor({
                   card={card}
                   key={card}
                   selected={selected === card}
+                  onDrop={canEdit ? (row) => move(row, card) : undefined}
                   ariaLabel={`${card}, proposed discard; select to place instead`}
                   onClick={
                     canEdit

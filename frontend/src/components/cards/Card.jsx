@@ -1,12 +1,15 @@
+import useCardDrag from './useCardDrag.js';
 import { SUITS } from '../../lib/game.js';
 export default function Card({
   card,
   selected,
   draft,
   onClick,
+  onDrop,
   small = false,
   ariaLabel,
 }) {
+  const dragHandlers = useCardDrag(onDrop);
   const red = card?.endsWith('h') || card?.endsWith('d');
   const rankLabel = card?.[0] === 'T' ? '10' : card?.[0];
   const suitSymbol = SUITS[card?.[1]];
@@ -17,6 +20,7 @@ export default function Card({
   const accessibleLabel = `${rankLabel} of ${suitName}${draftHint}`;
   const cardClass = [
     'card',
+    onDrop && 'draggable-card',
     suitName && `suit-${suitName}`,
     red && 'red',
     selected && 'selected',
@@ -28,6 +32,8 @@ export default function Card({
 
   return (
     <button
+      {...dragHandlers}
+      draggable={false}
       type="button"
       className={cardClass}
       disabled={!onClick}
