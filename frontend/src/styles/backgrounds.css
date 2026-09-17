@@ -1,0 +1,205 @@
+/* large, soft gradients animate with transforms rather than a canvas loop. */
+#root {
+  isolation: isolate;
+  min-height: 100svh;
+}
+body {
+  background-image: none;
+}
+.ambient-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.75;
+}
+.ambient-background.at-table {
+  opacity: 0.32;
+}
+.ambient-layer {
+  position: absolute;
+  width: 100%;
+  height: 110%;
+  top: -20%;
+  left: 0;
+  animation: ambient-drift 12s ease-in-out infinite alternate;
+  background: radial-gradient(
+    ellipse at 20% 30%,
+    color-mix(in srgb, var(--green), transparent 70%),
+    transparent 55%
+  );
+}
+.ambient-two {
+  background: radial-gradient(
+    ellipse at 85% 35%,
+    color-mix(in srgb, var(--gold), transparent 50%),
+    transparent 50%
+  );
+  animation-duration: 16s;
+  animation-delay: -12s;
+  animation-direction: alternate-reverse;
+}
+.ambient-three {
+  background: radial-gradient(
+    ellipse at 50% 65%,
+    color-mix(in srgb, var(--green), transparent 85%),
+    transparent 55%
+  );
+  animation-duration: 19s;
+  animation-delay: -20s;
+}
+.ambient-dots {
+  display: none;
+}
+[data-background='mesh'] .ambient-layer {
+  top: -10%;
+  background: radial-gradient(
+    ellipse at 15% 20%,
+    color-mix(in srgb, var(--green), transparent 65%),
+    transparent 55%
+  );
+  animation-name: mesh-drift;
+}
+[data-background='mesh'] .ambient-two {
+  background: radial-gradient(
+    ellipse at 90% 70%,
+    color-mix(in srgb, var(--gold), transparent 30%),
+    transparent 55%
+  );
+}
+[data-background='mesh'] .ambient-three {
+  background: radial-gradient(
+    ellipse at 45% 40%,
+    color-mix(in srgb, var(--red), transparent 80%),
+    transparent 55%
+  );
+}
+[data-background='dots'] .ambient-layer {
+  display: none;
+}
+[data-background='waves'] .ambient-layer {
+  width: 140vmax;
+  height: 140vmax;
+  top: 35%;
+  left: -20%;
+  border-radius: 44% 56% 62% 38%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--green), transparent 85%),
+    color-mix(in srgb, var(--gold), transparent 95%) 60%
+  );
+  border: 1px solid color-mix(in srgb, var(--green), transparent 85%);
+  animation-name: wave-drift;
+  animation-duration: 24s;
+  animation-timing-function: linear;
+}
+[data-background='waves'] .ambient-two {
+  top: 42%;
+  animation-duration: 32s;
+}
+[data-background='waves'] .ambient-three {
+  top: 50%;
+  animation-duration: 40s;
+}
+[data-background='shapes'] .ambient-layer {
+  width: clamp(180px, 30vw, 440px);
+  height: auto;
+  aspect-ratio: 1;
+  top: 12%;
+  left: 5%;
+  border: 1px solid color-mix(in srgb, var(--green), transparent 60%);
+  border-radius: 24%;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--green), transparent 94%),
+    transparent
+  );
+  animation-name: shape-drift;
+}
+[data-background='shapes'] .ambient-two {
+  top: 48%;
+  left: 60%;
+  border-radius: 50%;
+  border-color: color-mix(in srgb, var(--gold), transparent 60%);
+}
+[data-background='shapes'] .ambient-three {
+  width: clamp(120px, 20vw, 280px);
+  top: 65%;
+  left: 20%;
+  border-radius: 8%;
+}
+[data-theme='casino'] .ambient-one,
+[data-theme='casino'] .ambient-three {
+  border-radius: 4%;
+}
+[data-background='dots'] .ambient-dots {
+  display: block;
+  position: absolute;
+  inset: -60px;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--green), transparent 72%) 1px,
+    transparent 1.5px
+  );
+  background-size: 30px 30px;
+  mask-image: radial-gradient(ellipse at center, #000, transparent 80%);
+  animation: dots-drift 8s linear infinite;
+}
+[data-background='still'] .ambient-background {
+  display: none;
+}
+[data-background-motion='false'] .ambient-layer,
+[data-background-motion='false'] .ambient-dots,
+.ambient-background[data-paused='true'] .ambient-layer,
+.ambient-background[data-paused='true'] .ambient-dots {
+  animation-play-state: paused;
+}
+.settings-panel {
+  max-height: min(620px, 75svh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@keyframes ambient-drift {
+  from {
+    transform: translate(-5%, -3%) scale(1.05) rotate(-6deg);
+  }
+  to {
+    transform: translate(7%, 8%) scale(1.16) rotate(8deg);
+  }
+}
+@keyframes mesh-drift {
+  from {
+    transform: translate(-7%, 5%) scale(1.05);
+  }
+  to {
+    transform: translate(7%, -5%) scale(1.2);
+  }
+}
+@keyframes dots-drift {
+  to {
+    transform: translate(30px, 30px);
+  }
+}
+@keyframes wave-drift {
+  from {
+    transform: translateY(0) rotate(0);
+  }
+  to {
+    transform: translateY(-6%) rotate(40deg);
+  }
+}
+@keyframes shape-drift {
+  from {
+    transform: translate(-6%, -8%) rotate(-20deg);
+  }
+  to {
+    transform: translate(18%, 16%) rotate(45deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-background] .ambient-layer,
+  :root[data-background] .ambient-dots {
+    animation: none;
+  }
+}

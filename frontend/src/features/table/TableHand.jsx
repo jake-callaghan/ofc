@@ -48,6 +48,7 @@ export default function TableHand({
           hand={hand}
           names={game.player_names}
           playerId={session.player_id}
+          nextFantasy={game.fantasy}
         />
       </div>
     </>

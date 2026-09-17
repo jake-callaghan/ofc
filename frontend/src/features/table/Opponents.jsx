@@ -1,6 +1,7 @@
 import Board from '../../components/cards/Board.jsx';
+import FantasylandCelebration from './FantasylandCelebration.jsx';
 
-export default function Opponents({ hand, names, playerId }) {
+export default function Opponents({ hand, names, playerId, nextFantasy }) {
   return (
     <div className="opponents">
       {hand.players
@@ -23,11 +24,16 @@ export default function Opponents({ hand, names, playerId }) {
                     : 'At the table'}
               </span>
             </div>
-            <Board
-              board={hand.boards[p]}
-              compact
-              hidden={!!hand.fantasy[p] && hand.status !== 'complete'}
-            />
+            <div className="celebration-board">
+              {hand.status === 'complete' && nextFantasy[p] > 0 && (
+                <FantasylandCelebration key={hand.number} />
+              )}
+              <Board
+                board={hand.boards[p]}
+                compact
+                hidden={!!hand.fantasy[p] && hand.status !== 'complete'}
+              />
+            </div>
           </section>
         ))}
     </div>

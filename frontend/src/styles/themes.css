@@ -392,3 +392,19 @@ textarea:focus-visible {
     left: 0;
   }
 }
+
+.settings-panel .player-settings {
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.lobby .setup form > label:first-child {
+  margin-top: 0;
+}
+.lobby > .recent .empty {
+  text-align: left;
+  padding: 12px 0;
+}
+.lobby .saved-table strong {
+  overflow-wrap: anywhere;
+}

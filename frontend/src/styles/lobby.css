@@ -70,7 +70,7 @@
   margin-left: -10px;
 }
 .lobby {
-  max-width: 1180px;
+  max-width: 840px;
   margin: 0 auto;
   padding: 55px 30px 75px;
 }
@@ -89,7 +89,7 @@
 }
 .lobby-grid {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 32px;
 }
 .tabs {
@@ -175,7 +175,7 @@
   width: 100%;
 }
 .recent h2 {
-  margin-top: 12px;
+  margin: 0 0 12px;
 }
 .empty {
   text-align: center;
