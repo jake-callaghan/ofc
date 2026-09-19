@@ -25,7 +25,15 @@ test('table members exchange chat and reactions and can hide the panel', async (
     await owner.getByLabel('Chat message').fill('Hello <script>');
     await owner.getByRole('button', { name: 'Send', exact: true }).click();
     await expect(guest.getByLabel('Unread messages')).toBeVisible();
+    await expect(guest.locator('.chat-toggle')).toHaveCSS(
+      'animation-name',
+      'none',
+    );
     await guest.getByRole('button', { name: 'Open table chat' }).click();
+    await expect(guest.locator('.chat-toggle')).toHaveCSS(
+      'animation-name',
+      'none',
+    );
     await expect(
       guest.getByText('Hello <script>', { exact: true }),
     ).toBeVisible();
