@@ -63,6 +63,12 @@ class Leave(Model):
     type: Literal["leave"]
 
 
+class UpdateSettings(Model):
+    type: Literal["update_settings"]
+    turn_seconds: int | None = Field(ge=10, le=300)
+    orbits: int | None = Field(ge=1, le=100)
+
+
 class Place(Model):
     type: Literal["place"]
     placements: dict[Literal["top", "middle", "bottom"], list[str]]
@@ -73,7 +79,8 @@ class CommandInput(Model):
     request_id: str = Field(min_length=1, max_length=128)
     version: int = Field(ge=0)
     command: Annotated[
-        Join | Start | Place | AddCPU | Leave, Field(discriminator="type")
+        Join | Start | Place | AddCPU | Leave | UpdateSettings,
+        Field(discriminator="type"),
     ]
 
 

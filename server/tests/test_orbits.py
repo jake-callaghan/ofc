@@ -69,7 +69,8 @@ def test_unlimited_games_remain_open():
         start_hand(state, "a", ["a", "b"], DECK)
         state = finish(state)
     assert state["status"] == "active"
-    assert state["orbit_size"] is None
+    # retain the starting seat count if the owner later enables a limit.
+    assert state["orbit_size"] == 2
 
 
 @pytest.mark.parametrize("value", [0, -1, 101, True, 1.5, "2"])

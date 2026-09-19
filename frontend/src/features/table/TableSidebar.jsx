@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { capacity } from '../../lib/game.js';
 import { readSaved } from '../../lib/storage.js';
+import { invitationLink } from '../../lib/navigation.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
+import TableSettings from './TableSettings.jsx';
 
 export default function TableSidebar({
   game,
@@ -22,9 +24,7 @@ export default function TableSidebar({
   const selectedSeats = (seats || game.members.slice(0, max)).filter((p) =>
     game.members.includes(p),
   );
-  const share = invite
-    ? `${location.origin}${location.pathname}#join=${encodeURIComponent(JSON.stringify({ game: id, invite }))}`
-    : '';
+  const share = invite ? invitationLink(location.href, id, invite) : '';
   async function copy() {
     try {
       await navigator.clipboard.writeText(share);
@@ -40,6 +40,15 @@ export default function TableSidebar({
     game.status !== 'complete' && (!hand || hand.status === 'complete');
   return (
     <aside className="table-sidebar">
+      {owner && (!hand || hand.status === 'complete') && (
+        <TableSettings
+          key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}`}
+          game={game}
+          busy={busy}
+          connection={connection}
+          command={command}
+        />
+      )}
       {game.status === 'complete' && (
         <section className="panel">
           <h2>Game complete</h2>

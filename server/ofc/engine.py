@@ -55,7 +55,7 @@ def start_hand(game, actor, players, deck=None):
     )
     if required > 52:
         raise RuleError("rules and fantasyland awards exceed deck capacity")
-    if rules.orbits and game.get("orbit_size") is None:
+    if game.get("orbit_size") is None:
         game["orbit_size"] = len(players)
     # the dealer must occupy an active seat, even when members are sitting out.
     button = game["button"] % len(game["members"])
@@ -186,7 +186,25 @@ def transition(game, actor, command):
     else:
         if actor not in state["members"]:
             raise RuleError("not a member")
-        if kind == "start":
+        if kind == "update_settings":
+            if actor != state["owner"]:
+                raise RuleError("only the owner may edit table settings")
+            if state["hand"] and state["hand"]["status"] == "playing":
+                raise RuleError("edit table settings between hands")
+            rules = Rules(
+                **{
+                    **state["rules"],
+                    "turn_seconds": command["turn_seconds"],
+                    "orbits": command["orbits"],
+                }
+            )
+            state["rules"] = asdict(rules)
+            # older unlimited games did not record their starting seat count.
+            if state.get("orbit_size") is None and state["hand"]:
+                state["orbit_size"] = len(state["hand"]["players"])
+            state["status"] = "active"
+            update_completion(state)
+        elif kind == "start":
             start_hand(state, actor, command["players"])
         elif kind == "leave":
             if state["hand"] and state["hand"]["status"] == "playing":
