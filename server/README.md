@@ -1,5 +1,7 @@
 # OFC Python backend
 
+Table chat stores the latest 100 messages with the game state. Members can send up to 1,000 characters and add/remove emoji reactions. Chat uses the existing authenticated WebSocket snapshots with an independent revision counter, so it does not invalidate gameplay commands. Existing databases need no schema migration.
+
 A Python 3.13+ rules engine and FastAPI backend for persistent multiplayer
 open-face Chinese poker. Uses uv for environments, dependency locking, and tools.
 The React JavaScript frontend lives in `frontend/`; see [frontend setup](frontend/README.md).

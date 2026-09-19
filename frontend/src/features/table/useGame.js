@@ -10,6 +10,12 @@ export function useGame(id, token) {
   const pending = useRef(null);
   const accept = useCallback((state, serverTime) => {
     if (current.current && state.version < current.current.version) return;
+    if (
+      current.current &&
+      state.version === current.current.version &&
+      (state.chat_version || 0) < (current.current.chat_version || 0)
+    )
+      return;
     const clockOffset =
       typeof serverTime === 'number'
         ? serverTime * 1000 - Date.now()

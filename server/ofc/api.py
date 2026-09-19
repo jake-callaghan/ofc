@@ -84,6 +84,16 @@ class CommandInput(Model):
     ]
 
 
+class ChatMessage(Model):
+    request_id: str = Field(min_length=1, max_length=128)
+    text: str = Field(min_length=1, max_length=1000)
+
+
+class ChatReaction(Model):
+    emoji: Literal["👍", "❤️", "😂", "🎉", "😮", "🐟"]
+    active: bool
+
+
 def create_app(
     database_url: str | None = None, *, repository: Repository | None = None
 ):
@@ -178,6 +188,23 @@ def create_app(
     ):
         return store().history(game_id, actor, after, limit)
 
+    @app.post("/games/{game_id}/chat")
+    def chat_message(
+        game_id: str, body: ChatMessage, actor: Annotated[str, Depends(player)]
+    ):
+        return store().chat_message(game_id, actor, body.request_id, body.text)
+
+    @app.post("/games/{game_id}/chat/{message_id}/reactions")
+    def chat_reaction(
+        game_id: str,
+        message_id: str,
+        body: ChatReaction,
+        actor: Annotated[str, Depends(player)],
+    ):
+        return store().chat_reaction(
+            game_id, actor, message_id, body.emoji, body.active
+        )
+
     @app.websocket("/games/{game_id}/events")
     async def events(websocket: WebSocket, game_id: str):
         await websocket.accept()
@@ -190,7 +217,8 @@ def create_app(
             version = -1
             while True:
                 snapshot = await run_in_threadpool(store().get, game_id, actor)
-                if snapshot["version"] != version:
+                revision = (snapshot["version"], snapshot.get("chat_version", 0))
+                if revision != version:
                     await websocket.send_json(
                         {
                             "type": "snapshot",
@@ -198,7 +226,7 @@ def create_app(
                             "server_time": time.time(),
                         }
                     )
-                    version = snapshot["version"]
+                    version = revision
                 # a timed receive detects disconnects even when a game is idle.
                 try:
                     await asyncio.wait_for(websocket.receive_text(), timeout=0.5)

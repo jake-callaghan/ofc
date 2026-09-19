@@ -173,9 +173,7 @@ class Store:
             player = state["hand"]["queue"][0]["player"]
             if player not in state.get("cpu_players", []):
                 break
-            move = self.cpu(
-                public_view(state, player), player, Rules(**state["rules"])
-            )
+            move = self.cpu(public_view(state, player), player, Rules(**state["rules"]))
             state = transition(state, player, move)
         set_deadline(state, self.clock())
         return state
@@ -229,3 +227,59 @@ class Store:
             record = self._load(uow, game_id)
             public_view(record.state, actor)
             return uow.history(game_id, after, limit)
+
+    def chat_message(self, game_id, actor, request_id, text):
+        text = text.strip()
+        if not text or len(text) > 1000:
+            raise RuleError("messages must contain 1-1000 characters")
+        payload = {"type": "chat_message", "text": text}
+        with self.repository.transaction(write=True) as uow:
+            state = self._load(uow, game_id).state
+            if actor not in state["members"]:
+                raise Unauthorized("not a member")
+            previous = uow.receipt(game_id, actor, request_id)
+            if previous:
+                if previous.payload != payload:
+                    raise Conflict("request id reused with a different message")
+                return {"ok": True}
+            messages = state.setdefault("chat", [])
+            messages.append(
+                {
+                    "id": str(uuid4()),
+                    "player": actor,
+                    "name": uow.player_names([actor])[actor],
+                    "text": text,
+                    "created_at": self.clock(),
+                    "reactions": {},
+                }
+            )
+            state["chat"] = messages[-100:]
+            state["chat_version"] = state.get("chat_version", 0) + 1
+            uow.save_game(game_id, state)
+            uow.add_receipt(
+                game_id, actor, request_id, Receipt(payload, state["version"])
+            )
+        return {"ok": True}
+
+    def chat_reaction(self, game_id, actor, message_id, emoji, active):
+        if emoji not in {"👍", "❤️", "😂", "🎉", "😮", "🐟"} or type(active) is not bool:
+            raise RuleError("invalid reaction")
+        with self.repository.transaction(write=True) as uow:
+            state = self._load(uow, game_id).state
+            if actor not in state["members"]:
+                raise Unauthorized("not a member")
+            message = next(
+                (m for m in state.get("chat", []) if m["id"] == message_id), None
+            )
+            if message is None:
+                raise Missing("message no longer available")
+            players = message["reactions"].get(emoji, [])
+            if active == (actor in players):
+                return {"ok": True}
+            if active:
+                message["reactions"][emoji] = [*players, actor]
+            else:
+                message["reactions"][emoji] = [p for p in players if p != actor]
+            state["chat_version"] = state.get("chat_version", 0) + 1
+            uow.save_game(game_id, state)
+        return {"ok": True}

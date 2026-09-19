@@ -7,6 +7,7 @@ import TableSidebar from './TableSidebar.jsx';
 import TableHand from './TableHand.jsx';
 import TurnTimer from './TurnTimer.jsx';
 import HeaderScores from './HeaderScores.jsx';
+import TableChat from './TableChat.jsx';
 export default function Table({ id, session, home }) {
   const { game, connection, error, busy, command } = useGame(id, session.token);
   const [view, setView] = useState('table');
@@ -109,6 +110,12 @@ export default function Table({ id, session, home }) {
         </div>
       </div>
       <ErrorMessage message={error} />
+      <TableChat
+        key={id}
+        game={game}
+        session={session}
+        connection={connection}
+      />
       {hand?.turn && (
         <div className="turn-banner">
           {hand.turn.player === session.player_id
