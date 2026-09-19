@@ -11,3 +11,4 @@ frontend/playwright-report/
 work/
 .pnpm-store/
 .history/
+training/checkpoints/

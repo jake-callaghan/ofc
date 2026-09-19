@@ -4,6 +4,7 @@ Multiplayer OFC with Pineapple, Fantasyland, house-rule royalties and CPU practi
 
 - [Backend](server/README.md)
 - [Frontend](frontend/README.md)
+- [CPU reinforcement learning](training/README.md)
 
 ## Gameplay
 

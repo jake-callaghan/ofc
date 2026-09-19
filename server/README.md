@@ -259,3 +259,32 @@ at the next human turn. State, scoring, and the command receipt commit together,
 so retries and reconnects cannot apply CPU moves twice or strand a CPU turn.
 The frontend receives the resulting snapshot through the existing API/WebSocket
 protocol. A command may advance several game versions when CPUs act.
+# CPU strategy
+
+## Trained CPU
+
+`ofc/trained_cpu.py` exposes `TrainedCPU(path).choose_move(view, actor, rules)`, interchangeable with the other CPU move functions. It loads a trusted SB3 ZIP once, uses CPU inference, and reuses the exact observation encoder and action mask used in training.
+
+Enable it locally from the repository root:
+
+```sh
+OFC_CPU_MODEL=/absolute/path/to/checkpoint.zip \
+  uv run --directory server --extra trained-cpu uvicorn ofc.api:app --reload
+```
+
+With no `OFC_CPU_MODEL`, search remains the default. Invalid paths or incompatible observation/action dimensions fail at startup. Only load checkpoints produced by your trusted training pipeline; SB3 checkpoint loading is not a safe format for untrusted uploads.
+
+The current models support two-player Pineapple with Fantasyland, moon and Candyland **disabled**. Other tables use the search/heuristic fallback automatically, including tables with more than two members. Turn timers do not change inference. The engine still validates each completed move. Existing 421-input/208-action checkpoints keep their encoding unchanged.
+
+For direct use:
+
+```python
+from ofc.trained_cpu import TrainedCPU
+
+cpu = TrainedCPU("/absolute/path/to/checkpoint.zip")
+move = cpu.choose_move(view, actor, rules)
+```
+
+Inference dependencies are optional; the normal Docker image does not install them. A trained-model deployment needs the `trained-cpu` extra installed in both Docker sync steps, a checkpoint available on the machine, and `OFC_CPU_MODEL` pointing at it. Changing the checkpoint requires a backend restart.
+
+Website CPUs use bounded Monte Carlo search on ordinary Pineapple turns: up to 16 heuristic-shortlisted candidate placements, 8 shared sampled futures each, scored by valid royalties and foul risk. Final draws are exhaustive. Classic and Fantasyland turns use the existing heuristic. The shared implementation is `ofc/search.py`; it uses only public information and requires no training dependencies. Moon/Candyland awards are approximated against an ordinary opponent; future Fantasyland value is not modelled. Restart or redeploy the backend to activate code changes.

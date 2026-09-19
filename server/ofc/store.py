@@ -7,7 +7,7 @@ from copy import deepcopy
 from hashlib import sha256
 from uuid import uuid4
 
-from ofc.cpu import choose_move
+from ofc.bootstrap import build_cpu
 from ofc.engine import new_game, public_view, transition
 from ofc.persistence.ports import GameRecord, Receipt, Repository, State, UnitOfWork
 from ofc.rules import RuleError, Rules
@@ -27,9 +27,10 @@ class Conflict(RuleError):
 
 
 class Store:
-    def __init__(self, repository: Repository, *, clock=time.time):
+    def __init__(self, repository: Repository, *, clock=time.time, cpu=None):
         self.repository = repository
         self.clock = clock
+        self.cpu = cpu if cpu is not None else build_cpu()
 
     def register(self, name: str) -> State:
         if not name.strip():
@@ -172,7 +173,7 @@ class Store:
             player = state["hand"]["queue"][0]["player"]
             if player not in state.get("cpu_players", []):
                 break
-            move = choose_move(
+            move = self.cpu(
                 public_view(state, player), player, Rules(**state["rules"])
             )
             state = transition(state, player, move)

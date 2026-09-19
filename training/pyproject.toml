@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ofc-training"
+version = "0.1.0"
+description = "Masked PPO training for two-player Pineapple OFC"
+requires-python = ">=3.13"
+dependencies = [
+    "ofc-backend",
+    "numpy>=2,<3",
+    "gymnasium>=1,<2",
+    "torch>=2.6,<3",
+    "sb3-contrib>=2.6,<3",
+]
+
+[project.scripts]
+ofc-train = "ofc_training.train:main"
+ofc-evaluate = "ofc_training.evaluate:main"
+ofc-analyse = "ofc_training.search:main"
+
+[tool.uv.sources]
+ofc-backend = { path = "../server", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.16.7"]
+
+[tool.setuptools.packages.find]
+include = ["ofc_training*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
