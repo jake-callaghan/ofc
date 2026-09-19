@@ -33,5 +33,5 @@ function pick(words) {
 }
 
 export function randomTableName(playerName) {
-  return `${playerName.trim()}'s ${pick(adjectives)} ${pick(nouns)}`;
+  return `${playerName.trim()}'s ${pick(adjectives)} ${pick(nouns)} Table`;
 }
