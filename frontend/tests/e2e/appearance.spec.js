@@ -9,7 +9,7 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
   await page.getByLabel('Display name').fill('Appearance test');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'Tables', exact: true }),
+    page.getByRole('heading', { name: 'Lobby', exact: true }),
   ).toBeVisible();
   await page.getByRole('tab', { name: 'Join a table' }).click();
   await expect(page.getByLabel('Invitation link')).toBeVisible();
@@ -22,7 +22,7 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
     await expect(
       page.getByRole('switch', { name: 'Four-colour suits' }),
     ).toBeVisible();
-    for (const theme of ['forest', 'midnight', 'sunset']) {
+    for (const theme of ['ocean', 'midnight', 'casino']) {
       await page.getByLabel('Colour theme').selectOption(theme);
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       expect(
@@ -56,6 +56,14 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
   await expect(
     page.getByRole('heading', { name: 'Modern table' }),
   ).toBeVisible();
+  await page.getByText('Table settings', { exact: true }).click();
+  await page.getByLabel('Turn timer (seconds)').fill('45');
+  await page.getByLabel('Orbit limit').fill('3');
+  await page.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.locator('.table-subtitle')).toContainText('45s turns');
+  await expect(page.locator('.table-subtitle')).toContainText('3 orbits');
+  await page.reload();
+  await expect(page.locator('.table-subtitle')).toContainText('45s turns');
   await page.getByRole('button', { name: '← Tables' }).click();
   await page.getByRole('button', { name: 'Modern table', exact: true }).click();
   await expect(
@@ -72,16 +80,16 @@ test('themes include backgrounds and respect saved motion preferences', async ({
   await expect(page.getByLabel('Background style')).toHaveCount(0);
   await expect(page.locator('html')).toHaveAttribute(
     'data-background',
-    'aurora',
+    'shapes',
   );
-  await page.getByLabel('Colour theme').selectOption('sunset');
+  await page.getByLabel('Colour theme').selectOption('ocean');
   await page.getByRole('switch', { name: 'Background motion' }).click();
   await expect(page.locator('html')).toHaveAttribute(
     'data-background-motion',
     'false',
   );
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-background', 'mesh');
+  await expect(page.locator('html')).toHaveAttribute('data-background', 'waves');
   await expect(page.locator('.ambient-one')).toHaveCSS(
     'animation-play-state',
     'paused',
@@ -89,11 +97,8 @@ test('themes include backgrounds and respect saved motion preferences', async ({
   await page.locator('.settings > summary').click();
   await page.getByRole('switch', { name: 'Background motion' }).click();
   for (const [theme, background, animation] of [
-    ['forest', 'aurora', 'ambient-drift'],
     ['ocean', 'waves', 'wave-drift'],
-    ['plum', 'mesh', 'mesh-drift'],
     ['slate', 'shapes', 'shape-drift'],
-    ['sunset', 'mesh', 'mesh-drift'],
     ['casino', 'shapes', 'shape-drift'],
   ]) {
     await page.getByLabel('Colour theme').selectOption(theme);
