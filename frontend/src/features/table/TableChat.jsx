@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 
-const reactions = ['👍', '❤️', '😂', '🎉', '😮', '🐟'];
+const reactions = ['😭', '🎉', '⏳', '🐟', '😂'];
 
 export default function TableChat({ game, session, connection }) {
   const [open, setOpen] = useState(false);
@@ -176,7 +176,7 @@ export default function TableChat({ game, session, connection }) {
       <button
         type="button"
         ref={toggle}
-        className="chat-toggle"
+        className={`chat-toggle ${unread ? 'has-unread' : ''}`}
         aria-label={open ? 'Close table chat' : 'Open table chat'}
         aria-expanded={open}
         aria-controls="table-chat-panel"

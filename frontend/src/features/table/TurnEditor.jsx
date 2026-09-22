@@ -6,6 +6,8 @@ import {
   emptyBoard,
   placement,
   proposeDiscards,
+  sortCardsByRank,
+  sortCardsBySuitAndRank,
 } from '../../lib/game.js';
 import Card from '../../components/cards/Card.jsx';
 import Board from '../../components/cards/Board.jsx';
@@ -22,6 +24,7 @@ export default function TurnEditor({
   const hand = game.hand;
   const draw = hand.draws[session.player_id] || [];
   const board = hand.boards[session.player_id] || emptyBoard();
+  const [sort, setSort] = useState('rank');
   const [draft, setDraft] = useState({}),
     [selected, setSelected] = useState(null);
   const myTurn = hand.turn?.player === session.player_id;
@@ -52,7 +55,12 @@ export default function TurnEditor({
     setSelected(card);
   };
   const canEdit = !busy && connected && !(myTurn && timedOut);
-  const unassignedCards = draw.filter((card) => !proposedDraft[card]);
+  
+  // sort the unassigned cards based on selected sort method
+  const unassignedCards = sort === 'rank' 
+  ? sortCardsByRank(draw.filter((card) => !proposedDraft[card])) 
+  : sortCardsBySuitAndRank(draw.filter((card) => !proposedDraft[card]));
+
   const discardedCards = draw.filter(
     (card) => proposedDraft[card] === 'discard',
   );
@@ -154,6 +162,18 @@ export default function TurnEditor({
             </div>
           )}
           <div className="turn-actions">
+            <button
+              className="text-button"
+              onClick={() => setSort('rank')}
+            >
+              Sort by Rank
+            </button>
+            <button 
+              className="text-button"
+              onClick={() => setSort('suit')}
+            >
+              Sort by Suit
+            </button>
             <button
               className="text-button"
               disabled={busy || !Object.keys(draft).length}
