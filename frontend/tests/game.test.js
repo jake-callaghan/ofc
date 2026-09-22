@@ -7,6 +7,8 @@ import {
   emptyBoard,
   placement,
   proposeDiscards,
+  sortCardsByRank,
+  sortCardsBySuitAndRank,
 } from '../src/lib/game.js';
 
 test('a complete pineapple turn requires two placements and one discard', () => {
@@ -97,4 +99,21 @@ test('fantasyland proposes every remainder only once thirteen cards are placed',
     4,
   );
   assert.deepEqual(proposeDiscards(['Ac'], {}, 1), {});
+});
+
+test('sorting cards by rank or suit', () => {
+  // 5-cards 
+  const cards = ['3h', '2c', 'Ah', 'Kd', '5s'];
+  assert.deepEqual(sortCardsByRank(cards), ['2c', '3h', '5s', 'Kd', 'Ah']);
+  assert.deepEqual(sortCardsBySuitAndRank(cards), ['3h', 'Ah', '2c', 'Kd', '5s']);
+
+  // 3-cards
+  const cards2 = ['Qd', 'Jc', '10h'];
+  assert.deepEqual(sortCardsByRank(cards2), ['10h', 'Jc', 'Qd']);
+  assert.deepEqual(sortCardsBySuitAndRank(cards2), ['10h', 'Jc', 'Qd']);
+
+  // candyland 14 cards 
+  const cards14 = ['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah', '2d'];
+  assert.deepEqual(sortCardsByRank(cards14), ['2h', '2d', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah']);
+  assert.deepEqual(sortCardsBySuitAndRank(cards14), ['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah', '2d']);
 });

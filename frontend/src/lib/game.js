@@ -4,6 +4,8 @@ export const emptyBoard = () => ({ top: [], middle: [], bottom: [] });
 export const units = (value = 0) => `${value > 0 ? '+' : ''}${value}`;
 export const capacity = (rules) =>
   rules.variant === 'pineapple' || rules.candyland ? 3 : 4;
+export const rankOrder = '23456789TJQKA';
+export const suitOrder = 'hcds';
 
 export function assignCard(draft, card, destination, board) {
   const next = { ...draft };
@@ -37,6 +39,22 @@ export function placement(draw, draft, keep, board) {
     return null;
   return { type: 'place', placements, discards };
 }
+
+export function sortCardsByRank(cards) {
+  return [...cards].sort((a, b) => {
+    return rankOrder.indexOf(a[0]) - rankOrder.indexOf(b[0]);
+  });
+};
+
+export function sortCardsBySuitAndRank(cards) {
+  return [...cards].sort((a, b) => {
+    const suitComparison = suitOrder.indexOf(a[1]) - suitOrder.indexOf(b[1]);
+    if (suitComparison !== 0) {
+      return suitComparison;
+    }
+    return rankOrder.indexOf(a[0]) - rankOrder.indexOf(b[0]);
+  });
+};
 
 export function proposeDiscards(draw, draft, keep) {
   const placed = draw.filter((card) => draft[card] in ROWS).length;
