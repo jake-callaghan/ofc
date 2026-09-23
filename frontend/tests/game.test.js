@@ -8,6 +8,8 @@ import {
   placement,
   pendingAction,
   proposeDiscards,
+  sortCardsByRank,
+  sortCardsBySuitAndRank,
 } from '../src/lib/game.js';
 
 test('a complete pineapple turn requires two placements and one discard', () => {

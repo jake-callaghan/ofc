@@ -176,7 +176,7 @@ export default function TableChat({ game, session, connection }) {
       <button
         type="button"
         ref={toggle}
-        className="chat-toggle"
+        className={`chat-toggle ${unread ? 'has-unread' : ''}`}
         aria-label={open ? 'Close table chat' : 'Open table chat'}
         aria-expanded={open}
         aria-controls="table-chat-panel"
