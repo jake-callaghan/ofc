@@ -116,14 +116,25 @@ export default function Table({ id, session, home }) {
         session={session}
         connection={connection}
       />
-      {hand?.turn && (
+      {hand?.status === 'playing' && hand.fantasy[session.player_id] ? (
+        <div className="turn-banner">
+          {hand.fantasy_pending?.includes(session.player_id) ||
+          hand.turn?.player === session.player_id
+            ? 'Arrange your Fantasyland board and confirm when ready'
+            : 'Board confirmed · waiting for showdown'}
+        </div>
+      ) : hand?.turn ? (
         <div className="turn-banner">
           {hand.turn.player === session.player_id
             ? 'Your turn to play'
             : `${game.player_names[hand.turn.player]} is playing`}
           <TurnTimer game={game} />
         </div>
-      )}
+      ) : hand?.status === 'playing' ? (
+        <div className="turn-banner">
+          Waiting for Fantasyland players to confirm
+        </div>
+      ) : null}
       {hand?.last_timeout && (
         <p
           className="timeout-notice"

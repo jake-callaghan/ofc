@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 
-const reactions = ['😭', '🎉', '⏳', '🐟', '😂'];
+const reactions = ['👍', '😱', '😂', '👏', '😎', '🐟', '🍀'];
 
 export default function TableChat({ game, session, connection }) {
   const [open, setOpen] = useState(false);

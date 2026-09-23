@@ -124,3 +124,38 @@ def test_strategy_avoids_an_available_foul_on_last_draw():
     move = choose_move(view, "cpu", Rules())
     final = {r: board[r] + move["placements"][r] for r in board}
     assert not evaluate(final, Rules())["foul"]
+
+
+@pytest.mark.parametrize(
+    "human_fantasy,cpu_fantasy", [(True, False), (False, True), (True, True)]
+)
+def test_cpu_and_fantasy_progress_independently(tmp_path, human_fantasy, cpu_fantasy):
+    store = Store(build_repository(f"sqlite:///{tmp_path / 'independent.sqlite3'}"))
+    human = store.register("Human")["player_id"]
+    created = store.create(human, "Practice", Rules())
+    gid = created["game_id"]
+    result = store.command(gid, human, "cpu", 0, {"type": "add_cpu"})
+    cpu = result["state"]["cpu_players"][0]
+    with store.repository.transaction(write=True) as uow:
+        state = uow.get_game(gid).state
+        state["fantasy"] = {
+            human: 14 if human_fantasy else 0,
+            cpu: 14 if cpu_fantasy else 0,
+        }
+        uow.save_game(gid, state)
+    result = store.command(
+        gid, human, "start", 1, {"type": "start", "players": [human, cpu]}
+    )
+    assert cpu not in result["state"]["hand"]["fantasy_pending"]
+    if human_fantasy:
+        assert sum(map(len, result["state"]["hand"]["boards"][cpu].values())) == 0
+        assert result["state"]["hand"]["turn"] is None
+    for i in range(10):
+        if result["state"]["hand"]["status"] == "complete":
+            break
+        with store.repository.transaction() as uow:
+            state = uow.get_game(gid).state
+        actor, move = auto_command(state, human)
+        result = store.command(gid, actor, f"move-{i}", state["version"], move)
+    assert result["state"]["hand"]["status"] == "complete"
+    assert len(store.history(gid, human)) == 1

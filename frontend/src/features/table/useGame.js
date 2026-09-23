@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
+import { pendingAction } from '../../lib/game.js';
 
 export function useGame(id, token) {
   const [game, setGame] = useState(null);
@@ -89,6 +90,7 @@ export function useGame(id, token) {
     if (!pending.current || pending.current.serialized !== serialized) {
       pending.current = {
         serialized,
+        action: value.type === 'place' ? pendingAction(current.current) : null,
         body: {
           request_id: crypto.randomUUID(),
           version: current.current.version,
@@ -99,11 +101,24 @@ export function useGame(id, token) {
     setBusy(true);
     setError('');
     try {
-      const result = await api(
-        `/games/${id}/commands`,
-        token,
-        pending.current.body,
-      );
+      let result;
+      for (let attempt = 0; ; attempt++) {
+        try {
+          result = await api(
+            `/games/${id}/commands`,
+            token,
+            pending.current.body,
+          );
+          break;
+        } catch (e) {
+          if (e.status !== 409 || attempt >= 2 || !pending.current.action)
+            throw e;
+          accept(await api(`/games/${id}`, token));
+          if (pendingAction(current.current) !== pending.current.action)
+            throw e;
+          pending.current.body.version = current.current.version;
+        }
+      }
       if (result.state) accept(result.state);
       pending.current = null;
       return true;

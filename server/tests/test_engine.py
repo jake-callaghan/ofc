@@ -14,10 +14,11 @@ def game(rules=None, count=3):
     return state
 
 
-def auto_command(state):
+def auto_command(state, actor=None):
     hand = state["hand"]
-    turn = hand["queue"][0]
-    actor = turn["player"]
+    pending = hand.get("fantasy_pending", [])
+    actor = actor or (pending[0] if pending else hand["queue"][0]["player"])
+    turn = {"keep": 13} if actor in pending else hand["queue"][0]
     draw = hand["draws"][actor]
     remaining = list(draw[: turn["keep"]])
     placements = {}
@@ -161,3 +162,97 @@ def test_last_human_can_leave_and_rejoin_cpu_table():
     state = transition(state, "c", {"type": "join"})
     assert state["owner"] == "c"
     start_hand(state, "c", ["b", "c"], DECK)
+
+
+@pytest.mark.parametrize("fantasy_first", [False, True])
+def test_independent_fantasy_and_shared_showdown(fantasy_first):
+    state = game()
+    state["fantasy"] = {"a": 14, "c": 16}
+    start_hand(state, "a", state["members"], DECK)
+    assert {t["player"] for t in state["hand"]["queue"]} == {"b"}
+    opening = deepcopy(state["hand"]["draws"])
+    # one fantasy player can confirm before the other, in either seat order.
+    _, move = auto_command(state, "c")
+    queue = deepcopy(state["hand"]["queue"])
+    state = transition(state, "c", move)
+    assert state["hand"]["queue"] == queue
+    assert state["hand"]["draws"]["b"] == opening["b"]
+    with pytest.raises(RuleError):
+        transition(state, "c", move)
+    if fantasy_first:
+        _, move = auto_command(state, "a")
+        state = transition(state, "a", move)
+    while state["hand"]["queue"]:
+        _, move = auto_command(state, "b")
+        state = transition(state, "b", move)
+        if state["hand"]["status"] == "playing":
+            assert not any(public_view(state, "a")["hand"]["boards"]["b"].values())
+            assert not any(public_view(state, "b")["hand"]["boards"]["c"].values())
+    if not fantasy_first:
+        assert state["hand"]["status"] == "playing"
+        assert state["hand"]["result"] is None
+        assert public_view(state, "b")["hand"]["turn"] is None
+        _, move = auto_command(state, "a")
+        state = transition(state, "a", move)
+    assert state["hand"]["status"] == "complete"
+    for actor in state["members"]:
+        assert public_view(state, actor)["hand"]["boards"] == state["hand"]["boards"]
+    assert sum(state["hand"]["result"]["units"].values()) == 0
+
+
+def test_normal_opponents_remain_visible_while_fantasy_is_isolated():
+    state = game()
+    state["fantasy"]["a"] = 14
+    start_hand(state, "a", state["members"], DECK)
+    _, move = auto_command(state, "b")
+    state = transition(state, "b", move)
+    assert (
+        public_view(state, "c")["hand"]["boards"]["b"] == state["hand"]["boards"]["b"]
+    )
+    assert not any(public_view(state, "a")["hand"]["boards"]["b"].values())
+    assert not any(public_view(state, "c")["hand"]["boards"]["a"].values())
+
+
+@pytest.mark.parametrize("variant", ["pineapple", "classic"])
+def test_every_street_is_dealt_privately_before_anyone_confirms(variant):
+    state = game(Rules(variant=variant, fantasyland="standard"), count=3)
+    state["fantasy"]["a"] = 14 if variant == "pineapple" else 13
+    start_hand(state, "a", state["members"], DECK)
+    fantasy_draw = list(state["hand"]["draws"]["a"])
+    streets = 5 if variant == "pineapple" else 9
+    for street in range(streets):
+        hand = state["hand"]
+        draw_count = 5 if street == 0 else 3 if variant == "pineapple" else 1
+        keep = 5 if street == 0 else 2 if variant == "pineapple" else 1
+        reserved = deepcopy(hand["draws"])
+        assert all(len(reserved[p]) == draw_count for p in ("b", "c"))
+        for actor in ("b", "c"):
+            view = public_view(state, actor)["hand"]
+            assert view["draws"] == {actor: reserved[actor]}
+            assert view["draw_keep"] == keep
+        _, early = auto_command(state, "c")
+        with pytest.raises(RuleError, match="not your turn"):
+            transition(state, "c", early)
+        actor, move = auto_command(state, "b")
+        state = transition(state, actor, move)
+        assert state["hand"]["draws"]["b"] == []
+        assert state["hand"]["draws"]["c"] == reserved["c"]
+        actor, move = auto_command(state, "c")
+        state = transition(state, actor, move)
+        assert state["hand"]["draws"]["a"] == fantasy_draw
+    assert not state["hand"]["queue"]
+    assert state["hand"]["status"] == "playing"
+    actor, move = auto_command(state, "a")
+    state = transition(state, actor, move)
+    used = (
+        state["hand"]["deck"]
+        + [
+            c
+            for board in state["hand"]["boards"].values()
+            for row in board.values()
+            for c in row
+        ]
+        + [c for cards in state["hand"]["discards"].values() for c in cards]
+    )
+    assert len(used) == len(set(used)) == 52
+    assert state["hand"]["status"] == "complete"

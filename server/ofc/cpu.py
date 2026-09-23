@@ -61,7 +61,7 @@ def choose_move(view, actor, rules):
     hand = view["hand"]
     draw = hand["draws"][actor]
     board = hand["boards"][actor]
-    keep = hand["turn"]["keep"]
+    keep = 13 if hand.get("fantasy", {}).get(actor) else hand["turn"]["keep"]
     discard_count = len(draw) - keep
     rows = list(ROWS)
     if len(draw) <= 5:

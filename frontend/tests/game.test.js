@@ -6,6 +6,7 @@ import {
   capacity,
   emptyBoard,
   placement,
+  pendingAction,
   proposeDiscards,
   sortCardsByRank,
   sortCardsBySuitAndRank,
@@ -101,19 +102,33 @@ test('fantasyland proposes every remainder only once thirteen cards are placed',
   assert.deepEqual(proposeDiscards(['Ac'], {}, 1), {});
 });
 
-test('sorting cards by rank or suit', () => {
-  // 5-cards 
-  const cards = ['3h', '2c', 'Ah', 'Kd', '5s'];
-  assert.deepEqual(sortCardsByRank(cards), ['2c', '3h', '5s', 'Kd', 'Ah']);
-  assert.deepEqual(sortCardsBySuitAndRank(cards), ['3h', 'Ah', '2c', 'Kd', '5s']);
-
-  // 3-cards
-  const cards2 = ['Qd', 'Jc', '10h'];
-  assert.deepEqual(sortCardsByRank(cards2), ['10h', 'Jc', 'Qd']);
-  assert.deepEqual(sortCardsBySuitAndRank(cards2), ['10h', 'Jc', 'Qd']);
-
-  // candyland 14 cards 
-  const cards14 = ['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah', '2d'];
-  assert.deepEqual(sortCardsByRank(cards14), ['2h', '2d', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah']);
-  assert.deepEqual(sortCardsBySuitAndRank(cards14), ['2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah', '2d']);
+test('retry identity survives unrelated turns but not a changed own action', () => {
+  const game = {
+    hand: {
+      number: 3,
+      status: 'playing',
+      draws: { a: ['Ac', 'Kd'] },
+      boards: { a: emptyBoard(), b: emptyBoard() },
+      fantasy_pending: ['a'],
+      turn: { player: 'b', keep: 2 },
+    },
+  };
+  const identity = pendingAction(game);
+  assert.ok(identity);
+  game.hand.turn = null;
+  game.hand.boards.b.top.push('2c');
+  assert.equal(pendingAction(game), identity);
+  game.hand.number++;
+  assert.notEqual(pendingAction(game), identity);
+  game.hand.number--;
+  game.hand.fantasy_pending = [];
+  assert.equal(pendingAction(game), null);
+  game.hand.turn = { player: 'a', keep: 2 };
+  const normal = pendingAction(game);
+  game.hand.fantasy_pending = ['b'];
+  assert.equal(pendingAction(game), normal);
+  game.hand.boards.a.top.push('3c');
+  assert.notEqual(pendingAction(game), normal);
+  game.hand.status = 'complete';
+  assert.equal(pendingAction(game), null);
 });

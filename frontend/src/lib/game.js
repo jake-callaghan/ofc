@@ -65,3 +65,20 @@ export function proposeDiscards(draw, draft, keep) {
     draw.map((card) => [card, draft[card] || 'discard']),
   );
 }
+
+// identify the player's pending action so unrelated updates can be retried safely.
+export function pendingAction(game) {
+  const hand = game?.hand;
+  if (!hand || hand.status !== 'playing') return null;
+  const actor = Object.keys(hand.draws)[0];
+  const draw = hand.draws[actor];
+  const fantasy = hand.fantasy_pending?.includes(actor);
+  if (!draw?.length || (!fantasy && hand.turn?.player !== actor)) return null;
+  return JSON.stringify([
+    hand.number,
+    actor,
+    draw,
+    hand.boards[actor],
+    fantasy ? 13 : hand.turn.keep,
+  ]);
+}

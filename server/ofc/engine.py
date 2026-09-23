@@ -74,15 +74,16 @@ def start_hand(game, actor, players, deck=None):
         "discards": {p: [] for p in players},
         "fantasy": fantasies,
         "queue": [],
+        "fantasy_pending": [p for p in players if fantasies[p]],
         "result": None,
     }
-    # fantasy boards are committed before normal play but stay hidden until showdown.
+    # fantasy submissions run independently of the normal turn queue.
     normal = [p for p in players if not fantasies[p]]
     ordered = game["members"][button + 1 :] + game["members"][: button + 1]
     normal = [p for p in ordered if p in normal]
     for p in players:
         if fantasies[p]:
-            hand["queue"].append({"player": p, "draw": fantasies[p], "keep": 13})
+            _deal_draw(hand, {"player": p, "draw": fantasies[p]})
     for street in range(5 if rules.variant == "pineapple" else 9):
         for p in normal:
             draw, keep = (
@@ -90,19 +91,25 @@ def start_hand(game, actor, players, deck=None):
                 if street == 0
                 else ((3, 2) if rules.variant == "pineapple" else (1, 1))
             )
-            hand["queue"].append({"player": p, "draw": draw, "keep": keep})
+            hand["queue"].append(
+                {"player": p, "draw": draw, "keep": keep, "street": street}
+            )
     game["hand"] = hand
     game["hand_number"] += 1
-    # reserve each player's opening draw before anyone places cards.
-    for turn in hand["queue"]:
-        if turn["player"] not in hand["draws"]:
-            _deal_draw(hand, turn)
+    if hand["queue"]:
+        _deal_turn(hand)
 
 
 def _deal_turn(hand):
-    turn = hand["queue"][0]
-    if not hand["draws"].get(turn["player"]):
-        _deal_draw(hand, turn)
+    first = hand["queue"][0]
+    # reserve the current street in seat order, before anyone confirms.
+    # older saved hands lack street markers and retain their original dealing.
+    turns = hand["queue"] if "street" in first else [first]
+    for turn in turns:
+        if turn.get("street") != first.get("street"):
+            break
+        if not hand["draws"].get(turn["player"]):
+            _deal_draw(hand, turn)
 
 
 def _deal_draw(hand, turn):
@@ -117,8 +124,13 @@ def place(game, actor, placements, discards):
     hand = game["hand"]
     if not hand or hand["status"] != "playing":
         raise RuleError("no active hand")
-    turn = hand["queue"][0]
-    if actor != turn["player"]:
+    independent = actor in hand.get("fantasy_pending", [])
+    turn = (
+        {"player": actor, "keep": 13}
+        if independent
+        else (hand["queue"][0] if hand["queue"] else None)
+    )
+    if turn is None or actor != turn["player"]:
         raise RuleError("not your turn")
     if set(placements) - set(ROWS):
         raise RuleError("unknown row")
@@ -137,29 +149,35 @@ def place(game, actor, placements, discards):
         hand["boards"][actor][row].extend(cards)
     hand["discards"][actor].extend(discards)
     hand["draws"][actor] = []
-    hand["queue"].pop(0)
-    if hand["queue"]:
-        _deal_turn(hand)
+    if independent:
+        hand["fantasy_pending"].remove(actor)
     else:
-        rules = Rules(**game["rules"])
-        result = settle(hand["boards"], rules)
-        hand["result"] = result
-        hand["status"] = "complete"
-        for p, evaluation in result["evaluations"].items():
-            game["fantasy"][p] = next_fantasy(
-                evaluation, rules, bool(hand["fantasy"][p])
-            )
-        if not any(hand["fantasy"].values()):
-            game["normal_hands"] = game.get("normal_hands", 0) + 1
-        update_completion(game)
-        # hold the button while an active player has earned another fantasy hand.
-        if not any(game["fantasy"].get(p) for p in hand["players"]):
-            dealer = hand.get("dealer", game["members"][game["button"]])
-            active = hand["players"]
-            if dealer not in active:
-                dealer = active[0]
-            next_dealer = active[(active.index(dealer) + 1) % len(active)]
-            game["button"] = game["members"].index(next_dealer)
+        hand["queue"].pop(0)
+        if hand["queue"]:
+            _deal_turn(hand)
+    if not hand["queue"] and not hand.get("fantasy_pending"):
+        _finish_hand(game)
+
+
+def _finish_hand(game):
+    hand = game["hand"]
+    rules = Rules(**game["rules"])
+    result = settle(hand["boards"], rules)
+    hand["result"] = result
+    hand["status"] = "complete"
+    for p, evaluation in result["evaluations"].items():
+        game["fantasy"][p] = next_fantasy(evaluation, rules, bool(hand["fantasy"][p]))
+    if not any(hand["fantasy"].values()):
+        game["normal_hands"] = game.get("normal_hands", 0) + 1
+    update_completion(game)
+    # hold the button while an active player has earned another fantasy hand.
+    if not any(game["fantasy"].get(p) for p in hand["players"]):
+        dealer = hand.get("dealer", game["members"][game["button"]])
+        active = hand["players"]
+        if dealer not in active:
+            dealer = active[0]
+        next_dealer = active[(active.index(dealer) + 1) % len(active)]
+        game["button"] = game["members"].index(next_dealer)
 
 
 def update_completion(game):
@@ -239,9 +257,17 @@ def public_view(game, actor):
         hand["draws"] = {actor: hand["draws"].get(actor, [])}
         hand["discards"] = {actor: hand["discards"].get(actor, [])}
         hand["turn"] = hand["queue"][0] if hand["queue"] else None
+        own_turn = next((t for t in hand["queue"] if t["player"] == actor), None)
+        hand["draw_keep"] = (
+            13
+            if actor in hand.get("fantasy_pending", [])
+            else own_turn["keep"]
+            if own_turn
+            else None
+        )
         hand.pop("queue")
         if hand["status"] != "complete":
             for p in hand["players"]:
-                if p != actor and hand["fantasy"][p]:
+                if p != actor and (hand["fantasy"][p] or hand["fantasy"].get(actor)):
                     hand["boards"][p] = {r: [] for r in ROWS}
     return view
