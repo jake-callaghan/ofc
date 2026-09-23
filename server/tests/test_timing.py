@@ -108,14 +108,13 @@ def test_fantasyland_untimed_normal_player_gets_full_timer(timed):
         state["fantasy"][a] = 14
         uow.save_game(gid, state)
     start(timed)
-    assert raw(store, gid)["hand"]["deadline"] is None
-    clock[0] += 5000
-    store.process_timeouts()
+    assert raw(store, gid)["hand"]["deadline"] == 1030
+    clock[0] += 10
     state = raw(store, gid)
-    assert state["hand"]["queue"][0]["player"] == a
-    actor, move = auto_command(state)
+    assert state["hand"]["queue"][0]["player"] == b
+    actor, move = auto_command(state, a)
     store.command(gid, actor, "fantasy", state["version"], move)
-    assert raw(store, gid)["hand"]["deadline"] == clock[0] + 30
+    assert raw(store, gid)["hand"]["deadline"] == 1030
     assert raw(store, gid)["hand"]["queue"][0]["player"] == b
 
 
@@ -204,3 +203,55 @@ def test_cpu_receives_move_immediately_then_human_gets_full_time(timed):
     assert sum(map(len, state["hand"]["boards"][cpu].values())) == 5
     assert state["hand"]["queue"][0]["player"] == a
     assert state["hand"]["deadline"] == clock[0] + 30
+
+
+def test_normal_timeouts_finish_while_fantasy_waits_then_settle_once(timed):
+    store, gid, a, _, clock = timed
+    with store.repository.transaction(write=True) as uow:
+        state = uow.get_game(gid).state
+        state["fantasy"][a] = 14
+        uow.save_game(gid, state)
+    start(timed)
+    while raw(store, gid)["hand"]["queue"]:
+        clock[0] = raw(store, gid)["hand"]["deadline"]
+        assert store.expire_turn(gid)
+    state = raw(store, gid)
+    assert state["hand"]["deadline"] is None
+    assert state["hand"]["status"] == "playing"
+    assert not store.expire_turn(gid)
+    assert store.history(gid, a) == []
+    actor, move = auto_command(state, a)
+    result = store.command(gid, actor, "finish", state["version"], move)
+    assert result["state"]["hand"]["status"] == "complete"
+    store.command(gid, actor, "finish", state["version"], move)
+    assert len(store.history(gid, a)) == 1
+
+
+def test_concurrent_fantasy_confirmations_retry_and_settle_once(timed):
+    store, gid, a, b, _ = timed
+    with store.repository.transaction(write=True) as uow:
+        state = uow.get_game(gid).state
+        state["fantasy"] = {a: 14, b: 14}
+        uow.save_game(gid, state)
+    start(timed)
+    state = raw(store, gid)
+    assert state["hand"]["deadline"] is None
+    moves = {p: auto_command(state, p)[1] for p in (a, b)}
+
+    def submit(player):
+        try:
+            store.command(gid, player, player, state["version"], moves[player])
+            return None
+        except Conflict:
+            return player
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(submit, (a, b)))
+    assert results.count(None) == 1
+    retry = next(p for p in results if p is not None)
+    latest = raw(store, gid)
+    assert latest["hand"]["status"] == "playing"
+    store.command(gid, retry, retry, latest["version"], moves[retry])
+    assert raw(store, gid)["hand"]["status"] == "complete"
+    store.command(gid, retry, retry, latest["version"], moves[retry])
+    assert len(store.history(gid, a)) == 1

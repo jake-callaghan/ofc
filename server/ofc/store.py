@@ -155,7 +155,7 @@ class Store:
                     raise RuleError("select at least one human player")
                 updated = transition(state, actor, command)
             if command["type"] in {"start", "place"}:
-                updated = self._finish_turns(updated)
+                updated = self._finish_turns(updated, previous=state)
             self._save(uow, game_id, state, updated)
             uow.add_receipt(
                 game_id, actor, request_id, Receipt(payload, updated["version"])
@@ -167,15 +167,30 @@ class Store:
                 else self._view(uow, game_id, updated, actor),
             }
 
-    def _finish_turns(self, state):
+    def _finish_turns(self, state, previous=None):
         # cpu moves and the next human deadline commit together.
         while state["hand"] and state["hand"]["status"] == "playing":
-            player = state["hand"]["queue"][0]["player"]
-            if player not in state.get("cpu_players", []):
+            hand = state["hand"]
+            cpus = state.get("cpu_players", [])
+            player = next(
+                (p for p in hand.get("fantasy_pending", []) if p in cpus),
+                hand["queue"][0]["player"] if hand["queue"] else None,
+            )
+            if player not in cpus:
                 break
             move = self.cpu(public_view(state, player), player, Rules(**state["rules"]))
             state = transition(state, player, move)
-        set_deadline(state, self.clock())
+        # unrelated fantasy confirmations must not restart the normal clock.
+        before = previous and previous.get("hand")
+        hand = state["hand"]
+        unchanged = (
+            before
+            and hand
+            and before["number"] == hand["number"]
+            and before["queue"] == hand["queue"]
+        )
+        if not unchanged:
+            set_deadline(state, self.clock())
         return state
 
     @staticmethod

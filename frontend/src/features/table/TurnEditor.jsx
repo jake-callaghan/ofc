@@ -18,18 +18,20 @@ export default function TurnEditor({
   connected,
 }) {
   const secondsLeft = useTurnTimer(game);
-  const timedOut = secondsLeft === 0;
+  const timedOut = secondsLeft === 0 && !game.hand.fantasy[session.player_id];
   const hand = game.hand;
   const draw = hand.draws[session.player_id] || [];
   const board = hand.boards[session.player_id] || emptyBoard();
   const [draft, setDraft] = useState({}),
     [selected, setSelected] = useState(null);
-  const myTurn = hand.turn?.player === session.player_id;
-  const keep = myTurn
-    ? hand.turn.keep
-    : hand.fantasy[session.player_id]
-      ? 13
-      : 5;
+  const myTurn =
+    hand.turn?.player === session.player_id ||
+    hand.fantasy_pending?.includes(session.player_id);
+  const keep = hand.fantasy[session.player_id]
+    ? 13
+    : myTurn
+      ? hand.turn.keep
+      : (hand.draw_keep ?? 5);
   const proposedDraft = proposeDiscards(draw, draft, keep);
   const value = placement(draw, proposedDraft, keep, board);
   const move = (row, card = selected) => {
@@ -60,7 +62,9 @@ export default function TurnEditor({
   const waitingMessage =
     hand.status === 'complete'
       ? 'Hand complete.'
-      : `${game.player_names[hand.turn?.player] || 'Another player'} is arranging their cards.`;
+      : hand.turn
+        ? `${game.player_names[hand.turn.player] || 'Another player'} is arranging their cards.`
+        : 'Waiting for Fantasyland players to confirm.';
 
   function resetPlacement() {
     setDraft({});

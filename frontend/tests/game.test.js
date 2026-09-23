@@ -6,6 +6,7 @@ import {
   capacity,
   emptyBoard,
   placement,
+  pendingAction,
   proposeDiscards,
 } from '../src/lib/game.js';
 
@@ -97,4 +98,35 @@ test('fantasyland proposes every remainder only once thirteen cards are placed',
     4,
   );
   assert.deepEqual(proposeDiscards(['Ac'], {}, 1), {});
+});
+
+test('retry identity survives unrelated turns but not a changed own action', () => {
+  const game = {
+    hand: {
+      number: 3,
+      status: 'playing',
+      draws: { a: ['Ac', 'Kd'] },
+      boards: { a: emptyBoard(), b: emptyBoard() },
+      fantasy_pending: ['a'],
+      turn: { player: 'b', keep: 2 },
+    },
+  };
+  const identity = pendingAction(game);
+  assert.ok(identity);
+  game.hand.turn = null;
+  game.hand.boards.b.top.push('2c');
+  assert.equal(pendingAction(game), identity);
+  game.hand.number++;
+  assert.notEqual(pendingAction(game), identity);
+  game.hand.number--;
+  game.hand.fantasy_pending = [];
+  assert.equal(pendingAction(game), null);
+  game.hand.turn = { player: 'a', keep: 2 };
+  const normal = pendingAction(game);
+  game.hand.fantasy_pending = ['b'];
+  assert.equal(pendingAction(game), normal);
+  game.hand.boards.a.top.push('3c');
+  assert.notEqual(pendingAction(game), normal);
+  game.hand.status = 'complete';
+  assert.equal(pendingAction(game), null);
 });

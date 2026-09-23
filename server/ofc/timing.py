@@ -37,6 +37,7 @@ def set_deadline(state, now):
     timed = (
         seconds is not None
         and hand["status"] == "playing"
+        and bool(hand["queue"])
         and not hand["fantasy"][hand["queue"][0]["player"]]
     )
     hand["deadline"] = now + seconds if timed else None
@@ -47,6 +48,7 @@ def expired(state, now):
     return bool(
         hand
         and hand["status"] == "playing"
+        and bool(hand["queue"])
         and hand.get("deadline") is not None
         and now >= hand["deadline"]
         and not hand["fantasy"][hand["queue"][0]["player"]]

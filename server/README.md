@@ -139,8 +139,13 @@ Fantasyland requires QQ+ at the top on a valid board. Classic standard grants
 KK=15, AA=16, trips=17. Set 13 and discard the remainder.
 To stay: top trips or bottom quads+; Classic additionally allows middle full
 house+. Staying grants 13 cards in Classic or 14 in Pineapple, except Candyland.
-Fantasy players commit before normal players act; their boards remain hidden
-until every player finishes. The button holds while an active player earns
+At the start of each street, all normal players receive their private draws and
+can arrange cards early; only the current player may confirm. Draft placements
+remain local until confirmation.
+Fantasy players arrange and confirm independently while normal turns continue.
+Their boards remain hidden, and they cannot see opponents’ boards until showdown.
+Showdown waits for all normal turns and Fantasyland confirmations; normal players
+can still see each other’s placements during play. The button holds while an active player earns
 Fantasyland and otherwise advances through membership order. An inactive player's
 Fantasyland award is preserved until they next play.
 

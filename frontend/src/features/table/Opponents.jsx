@@ -20,7 +20,9 @@ export default function Opponents({ hand, names, playerId, nextFantasy }) {
                 {hand.turn?.player === p
                   ? 'Your opponent is playing'
                   : hand.fantasy[p]
-                    ? '✦ Fantasyland'
+                    ? hand.fantasy_pending?.includes(p)
+                      ? '✦ Fantasyland · arranging'
+                      : '✦ Fantasyland · confirmed'
                     : 'At the table'}
               </span>
             </div>
@@ -31,7 +33,10 @@ export default function Opponents({ hand, names, playerId, nextFantasy }) {
               <Board
                 board={hand.boards[p]}
                 compact
-                hidden={!!hand.fantasy[p] && hand.status !== 'complete'}
+                hidden={
+                  (!!hand.fantasy[p] || !!hand.fantasy[playerId]) &&
+                  hand.status !== 'complete'
+                }
               />
             </div>
           </section>
