@@ -1,6 +1,5 @@
 """map verified supabase accounts to stable players and encrypted server sessions."""
 
-import base64
 import hashlib
 import json
 import secrets
@@ -13,7 +12,6 @@ from sqlalchemy.exc import IntegrityError
 
 from ofc.auth_provider import AuthError
 from ofc.persistence.models import (
-    AuthFlowRow,
     AuthIdentityRow,
     AuthSessionRow,
     PlayerRow,
@@ -45,14 +43,14 @@ class AuthService:
 
     def verified(self, tokens):
         if not tokens.get("access_token") or not tokens.get("refresh_token"):
-            raise AuthError("Please verify your email before signing in.", 401)
+            raise AuthError("Your account is not available for sign-in.", 401)
         user = self.provider.user(tokens["access_token"])
         try:
             subject = str(UUID(user["id"]))
         except (KeyError, ValueError, TypeError):
             raise AuthError("Invalid account identity.", 401) from None
         if not user.get("email") or not user.get("email_confirmed_at"):
-            raise AuthError("Please verify your email before signing in.", 401)
+            raise AuthError("Your account is not available for sign-in.", 401)
         return {
             "subject": subject,
             "email": user["email"],
@@ -78,7 +76,7 @@ class AuthService:
             "user": user,
         }
 
-    def login(self, tokens, *, recovery=False, expected_player=None, old_token=None):
+    def login(self, tokens, *, recovery=False, old_token=None):
         user = self.verified(tokens)
         issuer = self.settings.url + "/auth/v1"
         # the unique issuer/subject key makes concurrent first logins converge.
@@ -87,13 +85,6 @@ class AuthService:
                 with self.repository.transaction(write=True) as uow:
                     db = uow.session
                     identity = db.get(AuthIdentityRow, (issuer, user["subject"]))
-                    if expected_player and (
-                        identity is None or identity.player_id != expected_player
-                    ):
-                        raise AuthError(
-                            "That login belongs to a different account. No accounts were merged.",
-                            409,
-                        )
                     if identity is None:
                         player = PlayerRow(
                             id=str(uuid4()), name=user["name"], token_hash=None
@@ -180,59 +171,8 @@ class AuthService:
                     )
                 )
 
-    def flow(self, kind, player_id=None):
-        token, verifier = secrets.token_urlsafe(32), secrets.token_urlsafe(48)
-        challenge = (
-            base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-            .decode()
-            .rstrip("=")
-        )
-        with self.repository.transaction(write=True) as uow:
-            uow.session.execute(
-                delete(AuthFlowRow).where(AuthFlowRow.expires_at <= self.clock())
-            )
-            uow.session.add(
-                AuthFlowRow(
-                    token_hash=digest(token),
-                    verifier=self.encrypt(verifier),
-                    kind=kind,
-                    player_id=player_id,
-                    expires_at=int(self.clock()) + 3600,
-                )
-            )
-        return token, challenge
-
-    def callback(self, flow_token, code, session_token=None):
-        if not flow_token or not code:
-            raise AuthError("This sign-in link has expired. Please start again.")
-        with self.repository.transaction(write=True) as uow:
-            row = uow.session.scalar(
-                select(AuthFlowRow)
-                .where(AuthFlowRow.token_hash == digest(flow_token))
-                .with_for_update()
-            )
-            if row is None or row.expires_at <= self.clock():
-                raise AuthError("This sign-in link has expired. Please start again.")
-            verifier, kind, expected = (
-                self.decrypt(row.verifier),
-                row.kind,
-                row.player_id,
-            )
-            uow.session.delete(row)
-        if expected:
-            profile, _ = self.session(session_token, recent=True)
-            if profile["player_id"] != expected:
-                raise AuthError("Sign in to the account you are linking first.", 401)
-        tokens = self.provider.token("pkce", auth_code=code, code_verifier=verifier)
-        return self.login(
-            tokens,
-            recovery=kind == "recovery",
-            expected_player=expected,
-            old_token=session_token,
-        )
-
     def password(self, token, password):
-        profile, access = self.session(token, allow_recovery=True, recent=True)
+        profile, access = self.session(token, recent=True)
         self.provider.request("PUT", "/user", token=access, data={"password": password})
         # all existing local sessions must stop working after a password change.
         with self.repository.transaction(write=True) as uow:

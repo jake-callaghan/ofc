@@ -1,13 +1,11 @@
 """same-origin login endpoints; browsers receive only opaque, http-only cookies."""
 
 from fastapi import APIRouter, Request, Response
-from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from ofc.auth_provider import AuthError
 
 SESSION_COOKIE = "ofc_session"
-FLOW_COOKIE = "ofc_auth_flow"
 
 
 class LoginInput(BaseModel):
@@ -23,18 +21,8 @@ class SignupInput(LoginInput):
     name: str = Field(min_length=1, max_length=80, pattern=r".*\S.*")
 
 
-class EmailInput(BaseModel):
-    email: str = Field(
-        min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-    )
-
-
 class PasswordInput(BaseModel):
     password: str = Field(min_length=12, max_length=256)
-
-
-class GoogleInput(BaseModel):
-    link: bool = False
 
 
 def service(request):
@@ -70,7 +58,7 @@ def router():
     def session(request: Request):
         auth = service(request)
         profile, _ = auth.session(
-            request.cookies.get(SESSION_COOKIE), allow_recovery=True
+            request.cookies.get(SESSION_COOKIE)
         )
         return profile
 
@@ -89,90 +77,25 @@ def router():
     @routes.post("/signup")
     def signup(body: SignupInput, request: Request, response: Response):
         auth = service(request)
-        flow, challenge = auth.flow("signup")
-        try:
-            auth.provider.request(
-                "POST",
-                "/signup",
-                params={"redirect_to": auth.settings.callback},
-                data={
-                    "email": body.email.strip(),
-                    "password": body.password,
-                    "data": {"name": body.name.strip()},
-                    "code_challenge": challenge,
-                    "code_challenge_method": "s256",
-                },
-            )
-        except AuthError as error:
-            if error.status != 401:
-                raise
-        cookie(response, auth, FLOW_COOKIE, flow, 3600)
-        return {
-            "message": "Check your email to confirm your account. Open the link in this browser. If you already have an account, sign in or reset your password."
-        }
-
-    @routes.post("/recover")
-    def recover(body: EmailInput, request: Request, response: Response):
-        auth = service(request)
-        flow, challenge = auth.flow("recovery")
-        auth.provider.request(
+        tokens = auth.provider.request(
             "POST",
-            "/recover",
-            params={"redirect_to": auth.settings.callback},
+            "/signup",
             data={
                 "email": body.email.strip(),
-                "code_challenge": challenge,
-                "code_challenge_method": "s256",
+                "password": body.password,
+                "data": {"name": body.name.strip()},
             },
         )
-        cookie(response, auth, FLOW_COOKIE, flow, 3600)
-        return {
-            "message": "If that email has an account, a reset link is on its way. Open it in this browser."
-        }
-
-    @routes.post("/google")
-    def google(body: GoogleInput, request: Request, response: Response):
-        auth = service(request)
-        player, access = None, None
-        if body.link:
-            profile, access = auth.session(
-                request.cookies.get(SESSION_COOKIE), recent=True
+        if not tokens.get("access_token") or not tokens.get("refresh_token"):
+            raise AuthError(
+                "Signup is not configured for immediate login. Please contact the administrator.",
+                503,
             )
-            player = profile["player_id"]
-        flow, challenge = auth.flow("link" if body.link else "google", player)
-        url = auth.provider.google_url(challenge, access)
-        cookie(response, auth, FLOW_COOKIE, flow, 3600)
-        return {"url": url}
-
-    @routes.get("/callback")
-    def callback(request: Request, code: str = ""):
-        auth = service(request)
-        try:
-            token, profile = auth.callback(
-                request.cookies.get(FLOW_COOKIE),
-                code,
-                request.cookies.get(SESSION_COOKIE),
-            )
-        except AuthError:
-            response = RedirectResponse(
-                auth.settings.origin + "/?auth_error=callback", status_code=303
-            )
-        else:
-            response = RedirectResponse(
-                auth.settings.origin
-                + ("/?auth=recovery" if profile["recovery"] else "/?auth=success"),
-                status_code=303,
-            )
-            cookie(
-                response,
-                auth,
-                SESSION_COOKIE,
-                token,
-                900 if profile["recovery"] else auth.settings.session_seconds,
-            )
-        response.delete_cookie(FLOW_COOKIE, path="/")
-        response.headers["Referrer-Policy"] = "no-referrer"
-        return response
+        token, profile = auth.login(
+            tokens, old_token=request.cookies.get(SESSION_COOKIE)
+        )
+        cookie(response, auth, SESSION_COOKIE, token, auth.settings.session_seconds)
+        return profile
 
     @routes.post("/password")
     def password(body: PasswordInput, request: Request, response: Response):

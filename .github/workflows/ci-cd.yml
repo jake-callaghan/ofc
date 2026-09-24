@@ -97,11 +97,23 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v6
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Stage production authentication secrets
+        run: python3 scripts/stage_auth_secrets.py
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          OFC_SUPABASE_URL: ${{ secrets.OFC_SUPABASE_URL }}
+          OFC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.OFC_SUPABASE_PUBLISHABLE_KEY }}
+          OFC_AUTH_ENCRYPTION_KEY: ${{ secrets.OFC_AUTH_ENCRYPTION_KEY }}
+          OFC_PUBLIC_ORIGIN: ${{ secrets.OFC_PUBLIC_ORIGIN }}
 
       - name: Deploy
         run: flyctl deploy --remote-only --ha=false

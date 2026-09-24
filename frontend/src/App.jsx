@@ -20,16 +20,6 @@ export default function App() {
   const [notice, setNotice] = useState('');
   useEffect(() => {
     let active = true;
-    const params = new URLSearchParams(location.search);
-    if (params.has('auth_error'))
-      setError('The sign-in link failed or expired. Please start again.');
-    if (params.has('auth')) {
-      const target = sessionStorage.getItem('ofc.login-return');
-      sessionStorage.removeItem('ofc.login-return');
-      if (target?.startsWith('#')) location.hash = target;
-    }
-    if (params.has('auth') || params.has('auth_error'))
-      history.replaceState(null, '', location.pathname + location.hash);
     api('/auth/config')
       .then(async (value) => {
         if (!active) return;

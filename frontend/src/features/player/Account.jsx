@@ -25,16 +25,6 @@ export default function Account({ session, onClose, onPasswordSaved }) {
       setBusy(false);
     }
   }
-  async function connect() {
-    setBusy(true);
-    setError('');
-    try {
-      location.assign((await api('/auth/google', null, { link: true })).url);
-    } catch (e) {
-      setError(e.message);
-      setBusy(false);
-    }
-  }
   return (
     <main className="welcome">
       <section className="panel welcome-form">
@@ -42,27 +32,6 @@ export default function Account({ session, onClose, onPasswordSaved }) {
         <p>
           {session.name} · {session.email}
         </p>
-        {!session.recovery && (
-          <>
-            <p>
-              Connected login methods:{' '}
-              {session.providers?.join(', ') || 'email'}
-            </p>
-            {!session.providers?.includes('google') && (
-              <button
-                className="secondary"
-                disabled={busy}
-                onClick={connect}
-              >
-                Connect Google
-              </button>
-            )}
-            <p>
-              Adding a login method keeps your player identity, games, and
-              history.
-            </p>
-          </>
-        )}
         <form onSubmit={save}>
           <label>
             New password

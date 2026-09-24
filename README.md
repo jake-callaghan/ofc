@@ -82,7 +82,7 @@ fly apps create YOUR_APP_NAME
 
 The old SQLite data is not copied. Existing player keys and game links refer to
 the old database and will no longer work. Retire the old Fly volume separately
-after verifying the new deployment. Google/email authentication is implemented locally; follow the separate
+after verifying the new deployment. Email/password authentication is implemented locally; follow the separate
 [authentication setup](server/AUTH.md) before enabling it. The current production
 deployment still uses player keys.
 
