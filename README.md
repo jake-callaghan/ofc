@@ -78,3 +78,15 @@ the database file while WAL writes are active.
 Subsequent updates use `fly deploy --ha=false` or the GitHub workflow. The same
 volume survives restarts and deployments; startup migrations preserve existing
 rows. Status and logs are available with `fly status` and `fly logs`.
+For isolated local tests, SQLite remains available only with an explicit
+`OFC_DATABASE_URL=sqlite:///data/test.sqlite3`. Without configuration, startup
+fails instead of silently creating a local database.
+
+## Lobby access
+
+Signed-in players can browse and watch every active table. New tables default to
+Open, so anyone can join from the lobby or with an invite. Private tables are
+also listed and watchable, but joining requires an invitation. Hosts can change
+access between hands. Existing tables without an access setting remain Private.
+Spectators receive no private draws, discards, unrevealed Fantasyland boards, or
+member chat; joining a table makes a player eligible for a future hand.

@@ -35,6 +35,7 @@ export default function Table({ id, session, home }) {
       home();
     }
   }
+  const member = game.members.includes(session.player_id);
   const hand = game.hand;
   const completedHands =
     game.hand_number - (hand?.status === 'playing' ? 1 : 0);
@@ -65,6 +66,9 @@ export default function Table({ id, session, home }) {
           <h1>{game.name}</h1>
           <div className="table-subtitle">
             <span className="variant-name">{game.rules.variant}</span>
+            <span>
+              {game.visibility === 'open' ? 'Open' : 'Private · invite-only'}
+            </span>
             <span>{fantasyLabel}</span>
             {game.rules.orbits && (
               <span>
@@ -84,18 +88,31 @@ export default function Table({ id, session, home }) {
           </div>
         </div>
         <div className="table-heading-right">
-          <button
-            className="secondary"
-            disabled={busy || hand?.status === 'playing'}
-            title={
-              hand?.status === 'playing'
-                ? 'You can leave between hands'
-                : 'Remove yourself from this table'
-            }
-            onClick={leaveTable}
-          >
-            Leave table
-          </button>
+          {member && (
+            <button
+              className="secondary"
+              disabled={busy || hand?.status === 'playing'}
+              title={
+                hand?.status === 'playing'
+                  ? 'You can leave between hands'
+                  : 'Remove yourself from this table'
+              }
+              onClick={leaveTable}
+            >
+              Leave table
+            </button>
+          )}
+          {!member &&
+            game.visibility === 'open' &&
+            game.status !== 'complete' && (
+              <button
+                className="primary"
+                disabled={busy || connection !== 'live'}
+                onClick={() => command({ type: 'join' })}
+              >
+                Join table
+              </button>
+            )}
           <HeaderScores
             game={game}
             playerId={session.player_id}
@@ -110,12 +127,14 @@ export default function Table({ id, session, home }) {
         </div>
       </div>
       <ErrorMessage message={error} />
-      <TableChat
-        key={id}
-        game={game}
-        session={session}
-        connection={connection}
-      />
+      {member && (
+        <TableChat
+          key={id}
+          game={game}
+          session={session}
+          connection={connection}
+        />
+      )}
       {hand?.status === 'playing' && hand.fantasy[session.player_id] ? (
         <div className="turn-banner">
           {hand.fantasy_pending?.includes(session.player_id) ||
@@ -153,15 +172,17 @@ export default function Table({ id, session, home }) {
             >
               The table
             </button>
-            <button
-              className={view === 'history' ? 'active' : ''}
-              onClick={() => setView('history')}
-            >
-              Hand history <small>{completedHands}</small>
-            </button>
+            {member && (
+              <button
+                className={view === 'history' ? 'active' : ''}
+                onClick={() => setView('history')}
+              >
+                Hand history <small>{completedHands}</small>
+              </button>
+            )}
             <span className="hand-number">{handLabel}</span>
           </nav>
-          {view === 'history' && (
+          {member && view === 'history' && (
             <History
               game={game}
               token={session.token}

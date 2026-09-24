@@ -47,15 +47,16 @@ class RuleInput(Model):
 class GameInput(Model):
     name: str = Field(min_length=1, max_length=120)
     rules: RuleInput = Field(default_factory=RuleInput)
+    visibility: Literal["open", "private"] = "open"
 
 
 class Join(Model):
     type: Literal["join"]
-    invite: str = Field(min_length=1, max_length=128)
+    invite: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 class JoinInput(Model):
-    invite: str = Field(min_length=1, max_length=128)
+    invite: str | None = Field(default=None, min_length=1, max_length=128)
     request_id: str = Field(min_length=1, max_length=128)
 
 
@@ -76,6 +77,7 @@ class UpdateSettings(Model):
     type: Literal["update_settings"]
     turn_seconds: int | None = Field(ge=10, le=300)
     orbits: int | None = Field(ge=1, le=100)
+    visibility: Literal["open", "private"] | None = None
 
 
 class Place(Model):
@@ -251,7 +253,13 @@ def create_app(
 
     @app.post("/games", status_code=201)
     def create_game(body: GameInput, actor: Annotated[str, Depends(player)]):
-        return store().create(actor, body.name, Rules(**body.rules.model_dump()))
+        return store().create(
+            actor, body.name, Rules(**body.rules.model_dump()), body.visibility
+        )
+
+    @app.get("/games")
+    def lobby(actor: Annotated[str, Depends(player)]):
+        return store().lobby(actor)
 
     @app.post("/games/{game_id}/join")
     def join_game(

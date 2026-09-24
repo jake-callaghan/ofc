@@ -13,7 +13,12 @@ export default function TableHand({
   const hand = game.hand;
 
   if (!hand) {
-    return <EmptyTable />;
+    return (
+      <EmptyTable
+        watching={!game.members.includes(session.player_id)}
+        visibility={game.visibility}
+      />
+    );
   }
 
   const isPlaying = hand.players.includes(session.player_id);
@@ -39,8 +44,18 @@ export default function TableHand({
 
         {!isPlaying && (
           <div className="panel">
-            <h2>Sitting out</h2>
-            <p>You can join the next hand.</p>
+            <h2>
+              {game.members.includes(session.player_id)
+                ? 'Sitting out'
+                : 'Watching'}
+            </h2>
+            <p>
+              {game.members.includes(session.player_id)
+                ? 'You can join the next hand.'
+                : game.visibility === 'open'
+                  ? 'Join the table to play in a future hand.'
+                  : 'An invitation is required to join this private table.'}
+            </p>
           </div>
         )}
 

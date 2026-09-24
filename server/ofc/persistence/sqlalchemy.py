@@ -63,6 +63,37 @@ class SQLUnitOfWork:
             raise LookupError("cannot save a missing game")
         row.state = deepcopy(state)
 
+    def lobby_games(self):
+        state = GameRow.state
+        rows = self.session.execute(
+            select(
+                GameRow.id,
+                state["name"].as_string(),
+                state["visibility"].as_string(),
+                state["members"],
+                state["rules"]["variant"].as_string(),
+                state["hand"]["status"].as_string(),
+                state["hand_number"].as_integer(),
+            )
+            .where(
+                state["status"].as_string() == "active",
+                state["owner"].as_string().is_not(None),
+            )
+            .order_by(GameRow.id)
+        )
+        return [
+            {
+                "id": gid,
+                "name": name,
+                "visibility": visibility or "private",
+                "members": members,
+                "variant": variant,
+                "phase": "playing" if hand_status == "playing" else "between_hands",
+                "hand_number": number,
+            }
+            for gid, name, visibility, members, variant, hand_status, number in rows
+        ]
+
     def due_game_ids(self, now: float) -> list[str]:
         return list(
             self.session.scalars(

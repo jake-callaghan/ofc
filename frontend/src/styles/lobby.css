@@ -237,3 +237,43 @@
   display: block;
   margin-block: 12px;
 }
+
+.active-tables {
+  margin-bottom: 24px;
+}
+.active-tables h2 {
+  margin-top: 0;
+}
+.lobby-table-scroll {
+  overflow-x: auto;
+}
+.lobby-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.lobby-table th,
+.lobby-table td {
+  text-align: left;
+  padding: 14px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.lobby-table th {
+  font-weight: 500;
+}
+.lobby-table td:first-child {
+  min-width: 150px;
+  overflow-wrap: anywhere;
+}
+.lobby-table small {
+  display: block;
+  margin-top: 6px;
+  color: var(--green);
+}
+.lobby-table-actions {
+  display: flex;
+  gap: 8px;
+}
+.lobby-table-actions button {
+  padding: 8px 12px;
+}

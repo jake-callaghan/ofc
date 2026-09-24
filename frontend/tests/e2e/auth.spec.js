@@ -9,6 +9,7 @@ const profile = {
 };
 
 async function setup(page, initial = null) {
+  await page.route('**/api/games', (route) => route.fulfill({ json: [] }));
   let session = initial;
   const requests = [];
   await page.route('**/api/auth/**', async (route) => {
@@ -64,7 +65,9 @@ test('email login persists through reload without storing a player key, then log
     path: 'test-results/login-mobile.png',
     fullPage: true,
   });
-  await expect(page.getByRole('button', { name: /Google|Forgot password/ })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /Google|Forgot password/ }),
+  ).toHaveCount(0);
   await page.getByLabel('Email', { exact: true }).fill('alice@example.com');
   await page.getByLabel('Password', { exact: true }).fill('correct-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -89,7 +92,9 @@ test('email login persists through reload without storing a player key, then log
   ).toBeVisible();
 });
 
-test('email signup signs in immediately without confirmation', async ({ page }) => {
+test('email signup signs in immediately without confirmation', async ({
+  page,
+}) => {
   const requests = await setup(page);
   await page.goto('/');
   await page
@@ -101,15 +106,17 @@ test('email signup signs in immediately without confirmation', async ({ page }) 
   await page
     .getByRole('button', { name: 'Create account', exact: true })
     .click();
-  await expect(page.getByRole('heading', { name: 'Lobby', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Lobby', exact: true }),
+  ).toBeVisible();
   expect(requests.map((r) => r.path)).toEqual(['/api/auth/signup']);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Lobby', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Lobby', exact: true }),
+  ).toBeVisible();
 });
 
-test('signed-in players can change their password', async ({
-  page,
-}) => {
+test('signed-in players can change their password', async ({ page }) => {
   const requests = await setup(page, profile);
   await page.goto('/');
   await page.getByRole('button', { name: 'Account', exact: true }).click();
@@ -132,5 +139,7 @@ test('account offers password changes without Google', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Account', exact: true }).click();
   await expect(page.getByLabel('New password', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Google|Forgot password/ })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /Google|Forgot password/ }),
+  ).toHaveCount(0);
 });

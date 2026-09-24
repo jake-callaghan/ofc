@@ -51,9 +51,9 @@ class Store:
             raise Unauthorized("invalid player token")
         return player
 
-    def create(self, actor: str, name: str, rules: Rules) -> State:
+    def create(self, actor: str, name: str, rules: Rules, visibility="open") -> State:
         game_id, invite = str(uuid4()), secrets.token_urlsafe(24)
-        state = new_game(actor, name, rules)
+        state = new_game(actor, name, rules, visibility)
         with self.repository.transaction(write=True) as uow:
             uow.add_game(GameRecord(game_id, self.digest(invite), state))
             view = self._view(uow, game_id, state, actor)
@@ -66,7 +66,7 @@ class Store:
         return record
 
     def _view(self, uow: UnitOfWork, game_id: str, state: State, actor: str) -> State:
-        view = public_view(state, actor)
+        view = public_view(state, actor, allow_spectator=True)
         view["game_id"] = game_id
         view["balances"] = dict.fromkeys(state["members"], 0) | uow.balances(game_id)
         view["player_names"] = uow.player_names(
@@ -97,13 +97,26 @@ class Store:
 
     @staticmethod
     def snapshot_view(game_id, snapshot, actor):
-        view = public_view(snapshot["state"], actor)
+        view = public_view(snapshot["state"], actor, allow_spectator=True)
         view["game_id"] = game_id
         view["balances"] = deepcopy(snapshot["balances"])
         view["player_names"] = deepcopy(snapshot["player_names"])
         return view
 
-    def join(self, game_id: str, actor: str, request_id: str, invite: str) -> State:
+    def lobby(self, actor):
+        with self.repository.transaction() as uow:
+            return [
+                {
+                    **{k: v for k, v in game.items() if k != "members"},
+                    "member_count": len(game["members"]),
+                    "is_member": actor in game["members"],
+                }
+                for game in uow.lobby_games()
+            ]
+
+    def join(
+        self, game_id: str, actor: str, request_id: str, invite: str | None = None
+    ) -> State:
         # invitation holders cannot read the table version until they are members.
         return self.command(
             game_id, actor, request_id, None, {"type": "join", "invite": invite}
@@ -121,7 +134,7 @@ class Store:
     ) -> State:
         payload = dict(command)
         if payload.get("type") == "join":
-            payload["invite"] = self.digest(payload.get("invite", ""))
+            payload["invite"] = self.digest(payload.get("invite") or "")
         with self.repository.transaction(write=True) as uow:
             record = self._load(uow, game_id)
             state = record.state
@@ -136,9 +149,15 @@ class Store:
                     else self._view(uow, game_id, state, actor),
                 }
             if command["type"] == "join":
-                if not secrets.compare_digest(
-                    record.invite_hash, self.digest(command.get("invite", ""))
-                ):
+                if state.get("status") == "complete":
+                    raise RuleError("this game is complete")
+                invite = command.get("invite")
+                if (
+                    invite
+                    and not secrets.compare_digest(
+                        record.invite_hash, self.digest(invite)
+                    )
+                ) or (not invite and state.get("visibility", "private") != "open"):
                     raise Unauthorized("invalid invitation")
             elif actor not in state["members"]:
                 raise Unauthorized("not a member")
