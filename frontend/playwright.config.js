@@ -14,9 +14,10 @@ export default defineConfig({
   webServer: [
     {
       command:
-        'uv run --directory ../server uvicorn ofc.api:app --host 127.0.0.1 --port 8011',
+        'uv run --directory ../server python -m ofc.schema upgrade && uv run --directory ../server uvicorn ofc.api:app --host 127.0.0.1 --port 8011',
       url: 'http://127.0.0.1:8011/health',
       env: {
+        OFC_ALLOW_LEGACY_KEYS: '1',
         OFC_DATABASE_URL: `sqlite:///${join(tmpdir(), `ofc-e2e-${process.pid}.sqlite3`)}`,
       },
       reuseExistingServer: false,

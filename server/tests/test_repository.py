@@ -6,10 +6,10 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from db_helpers import create_app
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
-from ofc.api import create_app
 from ofc.engine import new_game
 from ofc.persistence.models import LedgerRow
 from ofc.persistence.ports import GameRecord, Receipt
@@ -130,3 +130,129 @@ def test_api_accepts_non_sql_repository():
         )
         assert response.status_code == 200
         assert response.json()["balances"] == {"alice": 42}
+
+
+def test_startup_requires_migrations(tmp_path):
+    from ofc.bootstrap import build_repository
+    from ofc.schema import upgrade
+
+    url = f"sqlite:///{tmp_path / 'empty.sqlite3'}"
+    with pytest.raises(RuntimeError, match="schema is not current"):
+        build_repository(url)
+    upgrade(url)
+    adapter = build_repository(url)
+    adapter.close()
+
+
+def test_reset_clears_data_and_replays_migrations(tmp_path):
+    from ofc.schema import configuration, reset, upgrade
+
+    url = f"sqlite:///{tmp_path / 'reset.sqlite3'}"
+    upgrade(url)
+    adapter = SQLAlchemyRepository(url)
+    store = Store(adapter)
+    player = store.register("alice")
+    store.create(player["player_id"], "old table", Rules())
+    adapter.close()
+    reset(url)
+    adapter = SQLAlchemyRepository(url)
+    with adapter.engine.connect() as connection:
+        from ofc.persistence.models import GameRow, PlayerRow
+
+        assert connection.scalar(select(func.count()).select_from(PlayerRow)) == 0
+        assert connection.scalar(select(func.count()).select_from(GameRow)) == 0
+    adapter.close()
+    command.check(configuration(url))
+
+
+def test_reset_refuses_unrelated_tables(tmp_path):
+    from sqlalchemy import create_engine
+
+    from ofc.schema import reset
+
+    url = f"sqlite:///{tmp_path / 'unrelated.sqlite3'}"
+    engine = create_engine(url)
+    with engine.begin() as connection:
+        connection.exec_driver_sql("CREATE TABLE unrelated (id INTEGER)")
+    with pytest.raises(ValueError, match="non-OFC"):
+        reset(url)
+    with engine.connect() as connection:
+        connection.exec_driver_sql("SELECT * FROM unrelated")
+    engine.dispose()
+
+
+def test_postgres_schema_isolation_and_reset():
+    from sqlalchemy import create_engine, text
+
+    from ofc.database import connection_url
+    from ofc.schema import configuration, reset, upgrade
+
+    url = os.environ.get("OFC_TEST_DATABASE_URL")
+    if not url:
+        pytest.skip("set OFC_TEST_DATABASE_URL to a dedicated postgres test database")
+    # an unrelated schema represents data owned by another service, such as auth.
+    other = "other_" + uuid4().hex
+    engine = create_engine(connection_url(url))
+    try:
+        with engine.begin() as connection:
+            connection.execute(text(f'CREATE SCHEMA "{other}"'))
+            connection.execute(
+                text(f'CREATE TABLE "{other}".keep_me (id INTEGER PRIMARY KEY)')
+            )
+            connection.execute(text(f'INSERT INTO "{other}".keep_me VALUES (42)'))
+        upgrade(url)
+        command.check(configuration(url))
+        adapter = SQLAlchemyRepository(url)
+        with adapter.engine.connect() as connection:
+            assert connection.scalar(text("SELECT current_schema()")) == "ofc"
+        adapter.close()
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    f'ALTER TABLE ofc.players ADD COLUMN external_id INTEGER REFERENCES "{other}".keep_me(id)'
+                )
+            )
+        reset(url)
+        command.check(configuration(url))
+        with engine.connect() as connection:
+            assert connection.scalar(text(f'SELECT id FROM "{other}".keep_me')) == 42
+            assert (
+                connection.scalar(text("SELECT version_num FROM ofc.alembic_version"))
+                == "0002"
+            )
+    finally:
+        with engine.begin() as connection:
+            connection.execute(text(f'DROP TABLE IF EXISTS "{other}".keep_me'))
+            connection.execute(text(f'DROP SCHEMA IF EXISTS "{other}"'))
+        engine.dispose()
+
+
+def test_auth_migration_preserves_existing_players_and_games(tmp_path):
+    from sqlalchemy import text
+
+    from ofc.schema import configuration
+
+    url = f"sqlite:///{tmp_path / 'previous.sqlite3'}"
+    config = configuration(url)
+    command.upgrade(config, "0001")
+    adapter = SQLAlchemyRepository(url)
+    with adapter.engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO players (id,name,token_hash) VALUES ('existing','Alice','hash')"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO games (id,invite_hash,state) VALUES ('game','invite','{}')"
+            )
+        )
+    command.upgrade(config, "head")
+    command.check(config)
+    with adapter.engine.connect() as connection:
+        assert (
+            connection.scalar(text("SELECT name FROM players WHERE id='existing'"))
+            == "Alice"
+        )
+        assert connection.scalar(text("SELECT count(*) FROM games")) == 1
+    adapter.close()

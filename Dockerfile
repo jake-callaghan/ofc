@@ -13,12 +13,11 @@ WORKDIR /app/server
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy \
     PATH="/app/server/.venv/bin:$PATH" \
     OFC_STATIC_DIR=/app/frontend/dist \
-    OFC_DATABASE_URL=sqlite:////data/ofc.sqlite3 \
     PYTHONUNBUFFERED=1
 COPY server/pyproject.toml server/uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project
 COPY server/ ./
-RUN uv sync --locked --no-dev && mkdir -p /data
+RUN uv sync --locked --no-dev
 COPY --from=frontend /build/frontend/dist /app/frontend/dist
 EXPOSE 8080
 CMD ["sh", "-c", "alembic upgrade head && exec uvicorn ofc.web:create_app --factory --host 0.0.0.0 --port 8080"]

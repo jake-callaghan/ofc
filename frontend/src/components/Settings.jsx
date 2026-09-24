@@ -51,7 +51,7 @@ export default function Settings({ session }) {
         <BackgroundMotion />
         <SuitColours />
         <InstallApp />
-        {session && (
+        {session?.token && (
           <button
             className="text-button player-key-download"
             onClick={backup}

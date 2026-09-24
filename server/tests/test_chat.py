@@ -1,8 +1,7 @@
 import pytest
+from db_helpers import build_repository, create_app
 from fastapi.testclient import TestClient
 
-from ofc.api import create_app
-from ofc.bootstrap import build_repository
 from ofc.rules import Rules
 from ofc.store import Store, Unauthorized
 

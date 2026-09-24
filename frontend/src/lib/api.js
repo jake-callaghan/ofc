@@ -3,7 +3,9 @@ export async function api(path, token, body, signal) {
   try {
     response = await fetch(`/api${path}`, {
       method: body === undefined ? 'GET' : 'POST',
+      credentials: 'same-origin',
       headers: {
+        'X-OFC-Request': '1',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       },
@@ -30,6 +32,8 @@ export async function api(path, token, body, signal) {
       detail || 'Something went wrong. Please try again.',
     );
     error.status = response.status;
+    if (response.status === 401 && !path.startsWith('/auth/'))
+      window.dispatchEvent(new Event('ofc-session-expired'));
     throw error;
   }
   return data;

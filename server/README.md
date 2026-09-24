@@ -6,18 +6,26 @@ A Python 3.13+ rules engine and FastAPI backend for persistent multiplayer
 open-face Chinese poker. Uses uv for environments, dependency locking, and tools.
 The React JavaScript frontend lives in `frontend/`; see [frontend setup](frontend/README.md).
 
+## Authentication
+
+Google and email/password login are implemented locally. See [AUTH.md](AUTH.md)
+for isolated development setup, provider settings, identity linking, and sessions.
+The production deployment has not been updated with this authentication change.
+
 ## Run
 
 ```sh
 uv sync --directory server --locked
+# configure OFC_DATABASE_URL in server/.env first
+uv run --directory server python -m ofc.schema upgrade
 uv run --directory server uvicorn ofc.api:app --reload
 ```
 
 Open http://127.0.0.1:8000/docs for the interactive API schema.
-SQLite defaults to `server/data/ofc.sqlite3` when launched from the project root; set `OFC_DATABASE_URL` to choose another database
-(e.g. `sqlite:////absolute/path/ofc.sqlite3`).
-The database is created on application startup. Keep this file to resume games
-across restarts. For local React development, proxy `/players`, `/games`, and
+Configure `OFC_DATABASE_URL` in the environment or ignored `server/.env` file
+using your Supabase PostgreSQL direct or session-pooler URI. Migrations create
+tables in the private `ofc` schema before application startup.
+For local React development, proxy `/players`, `/games`, and
 `/health` to the backend, including WebSocket upgrade requests.
 
 ```sh
@@ -210,7 +218,26 @@ operations. ORM entities, SQL queries, locks, and connection management stay in
 the adapter. `create_app(repository=...)` accepts a custom adapter; the caller
 owns its lifecycle. The default composition root constructs a SQLAlchemy adapter.
 
-For managed PostgreSQL (including a compatible cloud-hosted PostgreSQL service):
+## Supabase PostgreSQL
+
+The main game database uses Supabase PostgreSQL, in the private `ofc` schema.
+Supabase's `auth`, `storage`, and `public` schemas are outside Alembic's scope.
+The app accesses game data through SQLAlchemy; do not expose `ofc` through the
+Supabase Data API. Migrations revoke schema access from PUBLIC and, when present,
+the `anon` and `authenticated` roles. Use the same database role for migration
+and runtime until dedicated role grants are configured.
+
+Set `OFC_DATABASE_URL` in the environment or the ignored `server/.env` file.
+Environment configuration takes precedence. Copy the direct or session-pooler
+URI from Supabase's Connect panel, substitute a URL-encoded password, and use
+TLS. `postgresql://` URIs automatically use psycopg; remote connections default
+to `sslmode=require`. The transaction pooler on port 6543 is not supported.
+The backend keeps at most seven pooled connections per process.
+
+There is no implicit SQLite fallback. For explicit local SQLite tests, set
+`OFC_DATABASE_URL=sqlite:///data/test.sqlite3` and run migrations first.
+
+For managed PostgreSQL:
 
 ```sh
 uv sync --directory server --locked --extra postgres
@@ -219,13 +246,47 @@ uv run --directory server alembic upgrade head
 uv run --directory server uvicorn ofc.api:app
 ```
 
-Use your provider's connection credentials and TLS settings. PostgreSQL schema
-changes are explicit migrations, never automatic startup DDL. SQLite creates a
-fresh schema automatically for local development. To manage a fresh SQLite
-schema with migrations instead, create its parent directory and run `uv run
-alembic upgrade head` before the first startup. For an existing **current ORM**
-local schema created by startup, use `uv run --directory server alembic stamp 0001` once before
-future upgrades; stamping does not migrate an older/different schema.
+Use your provider's connection credentials and TLS settings. Both SQLite and
+PostgreSQL use Alembic migrations. Application startup checks the revision and
+fails clearly when the schema is missing or behind; it never creates tables.
+
+## Schema versions and resets
+
+Run from the repository root:
+
+```sh
+uv run --directory server python -m ofc.schema upgrade
+uv run --directory server python -m ofc.schema current
+uv run --directory server python -m ofc.schema check
+```
+
+After changing the SQLAlchemy models, generate and review a migration:
+
+```sh
+uv run --directory server alembic revision --autogenerate -m "describe the change"
+uv run --directory server python -m ofc.schema upgrade
+```
+
+Commit migrations alongside model changes. Review generated changes, especially
+renames and data transformations. CI upgrades a blank database and checks it
+against the models; tests also exercise upgrades and resets. Docker runs upgrades
+before the server starts. With multiple app instances, run migrations once as a
+separate deployment step before bringing up the new application version.
+
+To discard all players, games, history, scores, and command receipts, first stop
+the server, then explicitly name the database and acknowledge deletion:
+
+```sh
+uv run --directory server python -m ofc.schema reset --database-url sqlite:///data/ofc.sqlite3 --delete-all-data
+```
+
+The SQLite path is relative to `server` when using `uv run --directory server`.
+The reset command drops application tables and replays migrations. On PostgreSQL
+it acts only inside `ofc`; it leaves Supabase authentication and all other schemas
+untouched. It refuses unexpected tables within the target schema. This is a separate administrative operation, never part of startup or
+ordinary deployment. Existing browser player keys become invalid after a reset.
+For an old unversioned development database whose data is disposable, use reset
+rather than stamping an unknown schema as current.
 
 PostgreSQL commands lock the game row with `SELECT FOR UPDATE`; SQLite uses
 `BEGIN IMMEDIATE`. Read operations use a consistent transaction snapshot so

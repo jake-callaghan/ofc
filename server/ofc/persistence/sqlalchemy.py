@@ -3,14 +3,12 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import deepcopy
-from pathlib import Path
 
-from sqlalchemy import create_engine, event, func, select
-from sqlalchemy.engine import make_url
+from sqlalchemy import event, func, select
 from sqlalchemy.orm import Session
 
+from ofc.database import connection_url, create_database_engine
 from ofc.persistence.models import (
-    Base,
     CommandRow,
     GameRow,
     HandRow,
@@ -24,6 +22,7 @@ class SQLUnitOfWork:
     def __init__(self, session: Session, *, write: bool):
         self.session = session
         self.write = write
+        self.games = {}
 
     def add_player(self, player_id: str, name: str, token_hash: str) -> None:
         self.session.add(PlayerRow(id=player_id, name=name, token_hash=token_hash))
@@ -52,10 +51,14 @@ class SQLUnitOfWork:
         if self.write:
             query = query.with_for_update()
         row = self.session.scalar(query)
+        if row is not None:
+            self.games[game_id] = row
         return GameRecord(row.id, row.invite_hash, deepcopy(row.state)) if row else None
 
     def save_game(self, game_id: str, state: State) -> None:
-        row = self.session.get(GameRow, game_id)
+        row = self.games.get(game_id)
+        if row is None:
+            row = self.session.get(GameRow, game_id)
         if row is None:
             raise LookupError("cannot save a missing game")
         row.state = deepcopy(state)
@@ -136,21 +139,16 @@ class SQLUnitOfWork:
 
 class SQLAlchemyRepository:
     def __init__(self, database_url: str):
-        url = make_url(database_url)
-        dialect = url.get_backend_name()
-        if dialect not in {"sqlite", "postgresql"}:
-            raise ValueError("supported sql adapters are sqlite and postgresql")
-        self.sqlite = dialect == "sqlite"
-        if self.sqlite:
-            if not url.database or url.database == ":memory:":
-                raise ValueError("use a sqlite file for durable concurrent games")
-            Path(url.database).parent.mkdir(parents=True, exist_ok=True)
-        self.engine = create_engine(
+        url = connection_url(database_url)
+        self.sqlite = url.get_backend_name() == "sqlite"
+        self.engine = create_database_engine(
             url,
             pool_pre_ping=True,
-            connect_args={"check_same_thread": False, "timeout": 10}
-            if self.sqlite
-            else {},
+            **(
+                {"connect_args": {"check_same_thread": False, "timeout": 10}}
+                if self.sqlite
+                else {"pool_size": 5, "max_overflow": 2}
+            ),
         )
         if self.sqlite:
 
@@ -165,8 +163,10 @@ class SQLAlchemyRepository:
                 connection.exec_driver_sql("BEGIN IMMEDIATE" if immediate else "BEGIN")
 
     def create_schema(self) -> None:
-        """bootstrap an empty development/test database; deployments use alembic."""
-        Base.metadata.create_all(self.engine)
+        """explicitly apply migrations to a development/test database."""
+        from ofc.schema import upgrade
+
+        upgrade(self.engine.url.render_as_string(hide_password=False))
 
     @contextmanager
     def transaction(self, *, write: bool = False) -> Iterator[SQLUnitOfWork]:
