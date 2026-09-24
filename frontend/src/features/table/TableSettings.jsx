@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
 export default function TableSettings({ game, busy, connection, command }) {
+  const [visibility, setVisibility] = useState(game.visibility || 'private');
   const [timer, setTimer] = useState(game.rules.turn_seconds ?? '');
   const [orbits, setOrbits] = useState(game.rules.orbits ?? '');
   const changed =
+    visibility !== (game.visibility || 'private') ||
     (timer === '' ? null : Number(timer)) !== game.rules.turn_seconds ||
     (orbits === '' ? null : Number(orbits)) !== game.rules.orbits;
 
@@ -11,6 +13,7 @@ export default function TableSettings({ game, busy, connection, command }) {
     event.preventDefault();
     command({
       type: 'update_settings',
+      visibility,
       turn_seconds: timer === '' ? null : Number(timer),
       orbits: orbits === '' ? null : Number(orbits),
     });
@@ -20,6 +23,16 @@ export default function TableSettings({ game, busy, connection, command }) {
     <details className="panel table-settings">
       <summary>Table settings</summary>
       <form onSubmit={submit}>
+        <label>
+          Table access
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+          >
+            <option value="open">Open · anyone can join</option>
+            <option value="private">Private · invite-only</option>
+          </select>
+        </label>
         <label>
           Turn timer (seconds)
           <input

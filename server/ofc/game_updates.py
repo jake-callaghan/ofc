@@ -33,7 +33,6 @@ class GameUpdates:
             if (
                 entry["snapshot"] is None
                 or self.clock() - entry["checked"] >= self.interval
-                or actor not in entry["snapshot"]["state"]["members"]
             ):
                 # periodically reload names too, in case an account was renamed.
                 previous = entry["snapshot"]

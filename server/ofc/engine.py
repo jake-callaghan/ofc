@@ -7,11 +7,14 @@ from random import SystemRandom
 from ofc.rules import DECK, ROWS, RuleError, Rules, next_fantasy, settle
 
 
-def new_game(owner, name, rules):
+def new_game(owner, name, rules, visibility="open"):
     if not name.strip():
         raise RuleError("game name cannot be empty")
+    if visibility not in {"open", "private"}:
+        raise RuleError("invalid table visibility")
     return {
         "name": name,
+        "visibility": visibility,
         "owner": owner,
         "rules": asdict(rules),
         "members": [owner],
@@ -217,6 +220,10 @@ def transition(game, actor, command):
                 }
             )
             state["rules"] = asdict(rules)
+            if command.get("visibility") is not None:
+                if command["visibility"] not in {"open", "private"}:
+                    raise RuleError("invalid table visibility")
+                state["visibility"] = command["visibility"]
             # older unlimited games did not record their starting seat count.
             if state.get("orbit_size") is None and state["hand"]:
                 state["orbit_size"] = len(state["hand"]["players"])
@@ -247,15 +254,19 @@ def transition(game, actor, command):
     return state
 
 
-def public_view(game, actor):
-    if actor not in game["members"]:
+def public_view(game, actor, *, allow_spectator=False):
+    member = actor in game["members"]
+    if not member and not allow_spectator:
         raise RuleError("not a member")
     view = deepcopy(game)
+    view["visibility"] = game.get("visibility", "private")
+    if not member:
+        view.pop("chat", None)
     hand = view["hand"]
     if hand:
         hand.pop("deck")
-        hand["draws"] = {actor: hand["draws"].get(actor, [])}
-        hand["discards"] = {actor: hand["discards"].get(actor, [])}
+        hand["draws"] = {actor: hand["draws"].get(actor, [])} if member else {}
+        hand["discards"] = {actor: hand["discards"].get(actor, [])} if member else {}
         hand["turn"] = hand["queue"][0] if hand["queue"] else None
         own_turn = next((t for t in hand["queue"] if t["player"] == actor), None)
         hand["draw_keep"] = (

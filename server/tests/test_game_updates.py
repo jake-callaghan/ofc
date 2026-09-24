@@ -7,7 +7,7 @@ from sqlalchemy import event
 from test_store_api import setup_store
 
 from ofc.game_updates import GameUpdates
-from ofc.rules import RuleError, Rules
+from ofc.rules import Rules
 from ofc.store import Store
 
 
@@ -34,9 +34,12 @@ def test_shared_polling_queries_privacy_and_external_updates(tmp_path):
             assert set(views[1]["hand"]["draws"]) == {bob}
             assert "deck" not in views[0]["hand"]
             views[0]["player_names"][alice] = "mutated"
-            assert (await updates.get(gid, first, alice))["player_names"][alice] == "alice"
-            with pytest.raises(RuleError, match="not a member"):
-                await updates.get(gid, first, "outsider")
+            assert (await updates.get(gid, first, alice))["player_names"][
+                alice
+            ] == "alice"
+            spectator = await updates.get(gid, first, "outsider")
+            assert spectator["hand"]["draws"] == {}
+            assert len(queries) == 3
             queries.clear()
             now[0] += 0.6
             await asyncio.gather(
@@ -113,13 +116,16 @@ def test_new_member_can_connect_before_next_poll(tmp_path):
     store, _, alice, bob = setup_store(tmp_path)
     created = store.create(alice, "new table", Rules())
     gid = created["game_id"]
-    updates = GameUpdates(store, clock=lambda: 100.0)
+    now = [100.0]
+    updates = GameUpdates(store, clock=lambda: now[0])
 
     async def exercise():
         async with updates.subscribe(gid) as entry:
             await updates.get(gid, entry, alice)
             store.join(gid, bob, "join-new", created["invite"])
-            # the clock has not advanced, but bob's committed join must be visible.
+            # a new viewer can connect immediately, then sees membership on the next poll.
+            await updates.get(gid, entry, bob)
+            now[0] += 0.6
             view = await updates.get(gid, entry, bob)
             assert bob in view["members"]
             assert view["version"] == 1

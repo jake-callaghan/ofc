@@ -73,7 +73,7 @@ def test_http_and_websocket(tmp_path):
         auth_b = {"Authorization": "Bearer " + b["token"]}
         created = client.post("/games", headers=auth_a, json={"name": "friends"}).json()
         gid = created["game_id"]
-        assert client.get(f"/games/{gid}", headers=auth_b).status_code == 422
+        assert client.get(f"/games/{gid}", headers=auth_b).status_code == 200
         assert (
             client.get(
                 f"/games/{gid}", headers={"Authorization": "Bearer wrong"}
@@ -144,7 +144,7 @@ def test_multiple_hands_accumulate_without_overwriting(tmp_path):
         assert len(store.history(gid, a)) == number
 
 
-def test_websocket_rejects_outsiders_and_bad_tokens(tmp_path):
+def test_websocket_allows_spectators_and_rejects_bad_tokens(tmp_path):
     from starlette.websockets import WebSocketDisconnect
 
     with TestClient(create_app(f"sqlite:///{tmp_path / 'ws.sqlite3'}")) as client:
@@ -155,7 +155,10 @@ def test_websocket_rejects_outsiders_and_bad_tokens(tmp_path):
             headers={"Authorization": "Bearer " + a["token"]},
             json={"name": "friends"},
         ).json()["game_id"]
-        for token in ["bad", b["token"]]:
+        with client.websocket_connect(f"/games/{gid}/events") as ws:
+            ws.send_json({"token": b["token"]})
+            assert b["player_id"] not in ws.receive_json()["state"]["members"]
+        for token in ["bad"]:
             with client.websocket_connect(f"/games/{gid}/events") as ws:
                 ws.send_json({"token": token})
                 with pytest.raises(WebSocketDisconnect) as error:
@@ -228,5 +231,4 @@ def test_leave_preserves_history_and_transfers_ownership(tmp_path):
     assert after["balances"] == before["balances"]
     assert after["player_names"][a] == "alice"
     assert len(store.history(gid, b)) == 1
-    with pytest.raises(RuleError, match="not a member"):
-        store.get(gid, a)
+    assert a not in store.get(gid, a)["members"]
