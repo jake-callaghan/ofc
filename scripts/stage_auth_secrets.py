@@ -37,6 +37,8 @@ def main():
             or url.fragment
         ):
             raise SystemExit(f"{name} must be an HTTPS origin without a path.")
+    # override the old remote database secret on every deployment.
+    values["OFC_DATABASE_URL"] = "sqlite:////data/ofc.sqlite3"
     # stdin keeps credentials out of command arguments; staging does not restart the app.
     subprocess.run(
         ["flyctl", "secrets", "import", "--app", "ofc", "--stage"],

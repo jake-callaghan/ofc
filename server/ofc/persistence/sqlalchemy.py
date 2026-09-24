@@ -109,13 +109,15 @@ class SQLUnitOfWork:
         )
 
     def balances(self, game_id: str) -> dict[str, int]:
-        return dict(
-            self.session.execute(
+        # postgres sum(bigint) returns decimal; ledger units are exact integers.
+        return {
+            player: int(units)
+            for player, units in self.session.execute(
                 select(LedgerRow.player, func.sum(LedgerRow.units))
                 .where(LedgerRow.game_id == game_id)
                 .group_by(LedgerRow.player)
             ).all()
-        )
+        }
 
     def history(self, game_id: str, after: int, limit: int) -> list[State]:
         rows = self.session.scalars(

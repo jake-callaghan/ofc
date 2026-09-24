@@ -22,7 +22,7 @@ python3 -c 'import base64, secrets; print(base64.urlsafe_b64encode(secrets.token
 Save the output directly as the GitHub secret, not in source control. Do not
 regenerate it for every deployment. The workflow validates these settings and
 stages them on Fly via stdin, then deploys. Missing settings stop the deployment.
-The existing Fly database secret is preserved. Deployments are serialized so
+The workflow sets the Fly database secret to `sqlite:////data/ofc.sqlite3`. Deployments are serialized so
 staged settings cannot race another deployment from this workflow.
 
 In the production Supabase project, go to Authentication → Sign In / Providers.
@@ -32,8 +32,8 @@ Signup creates the account and immediately starts a browser session. The app doe
 not verify email ownership and does not offer emailed password resets.
 
 After these settings and the application changes are ready, pushing/merging the
-changes to `main` runs tests and deploys automatically. Fly's release command
-applies the schema migration before starting the new app. Saving GitHub secrets
+changes to `main` runs tests and deploys automatically. The app startup command
+applies migrations on the mounted SQLite volume before accepting traffic. Saving GitHub secrets
 alone does not deploy anything. Verify immediate signup, login, logout and signed-in
 password changes after release. Existing player keys do not become email accounts.
 

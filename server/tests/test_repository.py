@@ -72,7 +72,9 @@ def test_hand_and_ledger_rollback_together(repository):
         uow.record_hand(
             game_id, {"number": 1, "result": {"units": {player: 0}}, "boards": {}}, {}
         )
-        assert uow.balances(game_id) == {player: 0}
+        balances = uow.balances(game_id)
+        assert balances == {player: 0}
+        assert type(balances[player]) is int
         raise RuntimeError("simulate ledger transaction failure")
     with repository.transaction() as uow:
         assert uow.history(game_id, 0, 50) == []

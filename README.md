@@ -3,7 +3,7 @@
 Multiplayer OFC with Pineapple, Fantasyland, house-rule royalties and CPU practice. React frontend, Python/FastAPI backend, scores in units.
 
 - [Backend](server/README.md)
-- [Authentication development](server/AUTH.md)
+- [Authentication setup](server/AUTH.md)
 - [Frontend](frontend/README.md)
 - [CPU reinforcement learning](training/README.md)
 
@@ -15,9 +15,9 @@ Multiplayer OFC with Pineapple, Fantasyland, house-rule royalties and CPU practi
 
 Requires Python 3.13+, uv, Node 22.12+ and pnpm. Commands run from the repository root.
 
-Backend: copy `server/.env.example` to `server/.env`, then replace the password
-with your URL-encoded Supabase database password. Use a direct connection or the
-session pooler on port 5432. The file is ignored by Git and Docker.
+Backend: set `OFC_DATABASE_URL=sqlite:///data/ofc.sqlite3` in an ignored
+`server/.env`, or use a dedicated development PostgreSQL database. Configure
+Supabase login separately as described in [authentication setup](server/AUTH.md).
 
 ```sh
 uv run --directory server python -m ofc.schema upgrade
@@ -37,55 +37,44 @@ Frontend: http://localhost:5173 · API docs: http://localhost:8000/docs
 
 ```sh
 docker build -t ofc .
-docker run --rm -p 8080:8080 --env-file server/.env ofc
+docker run --rm -p 8080:8080 --env-file server/.env -v ofc_data:/data -e OFC_DATABASE_URL=sqlite:////data/ofc.sqlite3 ofc
 ```
 
 App: http://localhost:8080 · API docs: http://localhost:8080/api/docs
 
-One container serves the React build, API and WebSockets. Game data lives in the
-private `ofc` schema in Supabase PostgreSQL. Alembic migrations run at startup.
-Supabase owns its separate `auth` schema; these migrations never alter it.
+One container serves the React build, API and WebSockets. Alembic migrations run
+at startup before traffic is accepted.
 
 ## Fly.io
 
-The `ofc` app runs in London and connects to Supabase PostgreSQL. It no longer
-mounts the old SQLite volume. Before the first PostgreSQL deployment, store
-`OFC_DATABASE_URL` as a Fly secret (do not put credentials in `fly.toml`):
+The `ofc` app runs as one server in London. SQLite game data, player mappings and
+sessions live at `/data/ofc.sqlite3` on the persistent `ofc_local` volume.
+Supabase still handles email/password authentication; it is not contacted for
+every game action. See [authentication setup](server/AUTH.md).
+
+The switch starts with an empty game database. Existing Supabase login accounts
+remain, but users must sign in again and create new tables. Old games, history,
+and local player IDs are not copied. The old PostgreSQL data is left untouched.
+
+The GitHub production deployment stages `OFC_DATABASE_URL=sqlite:////data/ofc.sqlite3`
+on Fly, overriding the old PostgreSQL secret. The Docker startup command checks
+that `/data` is mounted, enables WAL, and runs migrations against the mounted file.
+There is no Fly release command because release machines cannot mount the volume.
+
+For a manual first cutover:
 
 ```sh
-fly secrets import --stage < server/.env
-```
-
-Keep only deployment secrets in that file. Staging avoids restarting the previous
-SQLite deployment before the PostgreSQL-ready image is available. The next deploy
-runs migrations against the shared database in its release command.
-
-Deploy updates:
-
-```sh
+fly volumes create ofc_local --app ofc --region lhr --size 1
+fly secrets set OFC_DATABASE_URL=sqlite:////data/ofc.sqlite3 --app ofc --stage
 fly deploy --ha=false
 ```
 
-Status and logs:
+Keep exactly one app Machine. Independent SQLite volumes do not share game state;
+do not scale horizontally without adding database replication. Fly volume
+snapshots provide recovery points, but a single Machine/volume has no live
+failover. Back up the database with SQLite's backup API, rather than copying only
+the database file while WAL writes are active.
 
-```sh
-fly status
-fly logs
-```
-
-For a new deployment, set a unique app name in `fly.toml`, then provision it before deploying:
-
-```sh
-fly auth login
-fly apps create YOUR_APP_NAME
-```
-
-The old SQLite data is not copied. Existing player keys and game links refer to
-the old database and will no longer work. Retire the old Fly volume separately
-after verifying the new deployment. Email/password authentication is implemented locally; follow the separate
-[authentication setup](server/AUTH.md) before enabling it. The current production
-deployment still uses player keys.
-
-For isolated local tests, SQLite remains available only with an explicit
-`OFC_DATABASE_URL=sqlite:///data/test.sqlite3`. Without configuration, startup
-fails instead of silently creating a local database.
+Subsequent updates use `fly deploy --ha=false` or the GitHub workflow. The same
+volume survives restarts and deployments; startup migrations preserve existing
+rows. Status and logs are available with `fly status` and `fly logs`.
