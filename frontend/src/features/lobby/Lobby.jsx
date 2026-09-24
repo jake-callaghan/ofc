@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ActiveTables from './ActiveTables.jsx';
 import { api } from '../../lib/api.js';
 import { capacity } from '../../lib/game.js';
 import { readSaved, save } from '../../lib/storage.js';
@@ -10,6 +11,7 @@ import ActionButton, {
 } from '../../components/ui/ActionButton.jsx';
 export default function Lobby({ session, openGame, pendingJoin }) {
   const [mode, setMode] = useState(pendingJoin ? 'join' : 'create');
+  const [visibility, setVisibility] = useState('open');
   const [name, setName] = useState(() => randomTableName(session.name));
   const [rules, setRules] = useState({
     variant: 'pineapple',
@@ -39,6 +41,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
         const result = await api('/games', session.token, {
           name: name.trim(),
           rules,
+          visibility,
         });
         save(`ofc.invite.${result.game_id}`, result.invite);
         openGame(result.game_id, result.state.name);
@@ -62,8 +65,12 @@ export default function Lobby({ session, openGame, pendingJoin }) {
       <div className="page-intro">
         <h1>Lobby</h1>
       </div>
+      <ActiveTables
+        session={session}
+        openGame={openGame}
+      />
       <section className="panel recent">
-        <h2>Your tables</h2>
+        <h2>Recent tables</h2>
         {saved.length ? (
           saved.map((table) => (
             <HoverButton
@@ -114,6 +121,20 @@ export default function Lobby({ session, openGame, pendingJoin }) {
                     required
                   />
                 </label>
+                <label>
+                  Table access
+                  <select
+                    value={visibility}
+                    onChange={(e) => setVisibility(e.target.value)}
+                  >
+                    <option value="open">Open · anyone can join</option>
+                    <option value="private">Private · invite-only</option>
+                  </select>
+                </label>
+                <p className="hint">
+                  Both are visible in the lobby. Private tables require an
+                  invite to join.
+                </p>
                 <label>Game</label>
                 <div className="variant-options">
                   {['pineapple', 'classic'].map((variant) => (

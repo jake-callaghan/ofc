@@ -42,7 +42,7 @@ export default function TableSidebar({
     <aside className="table-sidebar">
       {owner && (!hand || hand.status === 'complete') && (
         <TableSettings
-          key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}`}
+          key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}:${game.visibility}`}
           game={game}
           busy={busy}
           connection={connection}
