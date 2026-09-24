@@ -34,16 +34,10 @@ async function setup(page, initial = null) {
       session = null;
       return route.fulfill({ json: { ok: true } });
     }
-    if (path.endsWith('/signup'))
-      return route.fulfill({
-        json: { message: 'Check your email to confirm your account.' },
-      });
-    if (path.endsWith('/recover'))
-      return route.fulfill({
-        json: {
-          message: 'If that email has an account, a reset link is on its way.',
-        },
-      });
+    if (path.endsWith('/signup')) {
+      session = profile;
+      return route.fulfill({ json: profile });
+    }
     if (path.endsWith('/password')) {
       session = null;
       return route.fulfill({
@@ -52,18 +46,8 @@ async function setup(page, initial = null) {
         },
       });
     }
-    if (path.endsWith('/google'))
-      return route.fulfill({
-        json: { url: new URL('/google-test', route.request().url()).href },
-      });
     return route.fulfill({ status: 404, json: {} });
   });
-  await page.route('**/google-test', (route) =>
-    route.fulfill({
-      contentType: 'text/html',
-      body: '<h1>Google authentication</h1>',
-    }),
-  );
   return requests;
 }
 
@@ -80,6 +64,7 @@ test('email login persists through reload without storing a player key, then log
     path: 'test-results/login-mobile.png',
     fullPage: true,
   });
+  await expect(page.getByRole('button', { name: /Google|Forgot password/ })).toHaveCount(0);
   await page.getByLabel('Email', { exact: true }).fill('alice@example.com');
   await page.getByLabel('Password', { exact: true }).fill('correct-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
@@ -104,7 +89,7 @@ test('email login persists through reload without storing a player key, then log
   ).toBeVisible();
 });
 
-test('email signup and recovery explain the next step', async ({ page }) => {
+test('email signup signs in immediately without confirmation', async ({ page }) => {
   const requests = await setup(page);
   await page.goto('/');
   await page
@@ -116,42 +101,18 @@ test('email signup and recovery explain the next step', async ({ page }) => {
   await page
     .getByRole('button', { name: 'Create account', exact: true })
     .click();
-  await expect(page.getByRole('status')).toHaveText(
-    'Check your email to confirm your account.',
-  );
-  await page.getByRole('button', { name: 'Back to sign in' }).click();
-  await page.getByRole('button', { name: 'Forgot password?' }).click();
-  await page.getByRole('button', { name: 'Send reset link' }).click();
-  await expect(page.getByRole('status')).toContainText('reset link');
-  expect(requests.map((r) => r.path)).toEqual([
-    '/api/auth/signup',
-    '/api/auth/recover',
-  ]);
+  await expect(page.getByRole('heading', { name: 'Lobby', exact: true })).toBeVisible();
+  expect(requests.map((r) => r.path)).toEqual(['/api/auth/signup']);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Lobby', exact: true })).toBeVisible();
 });
 
-test('Google login follows the server-issued authorization URL', async ({
+test('signed-in players can change their password', async ({
   page,
 }) => {
-  const requests = await setup(page);
+  const requests = await setup(page, profile);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Continue with Google' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Google authentication' }),
-  ).toBeVisible();
-  expect(requests[0]).toEqual({ path: '/api/auth/google', body: {} });
-});
-
-test('password recovery requires a new password before returning to games', async ({
-  page,
-}) => {
-  const requests = await setup(page, { ...profile, recovery: true });
-  await page.goto('/?auth=recovery');
-  await expect(
-    page.getByRole('heading', { name: 'Choose a new password' }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Lobby', exact: true }),
-  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Account', exact: true }).click();
   await page
     .getByLabel('New password', { exact: true })
     .fill('my-new-password');
@@ -166,17 +127,10 @@ test('password recovery requires a new password before returning to games', asyn
   expect(requests[0].path).toBe('/api/auth/password');
 });
 
-test('connecting Google starts from the signed-in account', async ({
-  page,
-}) => {
-  const requests = await setup(page, profile);
+test('account offers password changes without Google', async ({ page }) => {
+  await setup(page, profile);
   await page.goto('/');
   await page.getByRole('button', { name: 'Account', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'Connect Google', exact: true })
-    .click();
-  await expect(
-    page.getByRole('heading', { name: 'Google authentication' }),
-  ).toBeVisible();
-  expect(requests[0].body).toEqual({ link: true });
+  await expect(page.getByLabel('New password', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Google|Forgot password/ })).toHaveCount(0);
 });

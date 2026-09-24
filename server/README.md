@@ -8,8 +8,8 @@ The React JavaScript frontend lives in `frontend/`; see [frontend setup](fronten
 
 ## Authentication
 
-Google and email/password login are implemented locally. See [AUTH.md](AUTH.md)
-for isolated development setup, provider settings, identity linking, and sessions.
+Email/password login are implemented locally. See [AUTH.md](AUTH.md)
+for isolated development setup, email settings, account identity, and sessions.
 The production deployment has not been updated with this authentication change.
 
 ## Run

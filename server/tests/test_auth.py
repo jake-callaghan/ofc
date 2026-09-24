@@ -1,9 +1,7 @@
 """authentication is tested against a local provider stub and a disposable database."""
 
-import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
-from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
 import httpx
@@ -16,7 +14,6 @@ from ofc.api import create_app
 from ofc.auth_provider import AuthSettings, SupabaseAuth
 from ofc.auth_service import digest
 from ofc.persistence.models import (
-    AuthFlowRow,
     AuthIdentityRow,
     AuthSessionRow,
     PlayerRow,
@@ -30,6 +27,7 @@ class FakeProvider:
         self.user_id = str(uuid4())
         self.other_id = str(uuid4())
         self.confirmed = True
+        self.confirmation_required = False
         self.calls = []
         self.refreshes = 0
 
@@ -37,6 +35,12 @@ class FakeProvider:
         body = json.loads(request.content) if request.content else {}
         self.calls.append((request.method, request.url.path, body))
         path = request.url.path.removeprefix("/auth/v1")
+        if path == "/signup":
+            if self.confirmation_required:
+                return httpx.Response(200, json={"id": self.user_id})
+            return httpx.Response(200, json={
+                "access_token": "access", "refresh_token": "refresh", "expires_in": 3600
+            })
         if path == "/token":
             if (
                 body.get("password") == "incorrect"
@@ -67,13 +71,8 @@ class FakeProvider:
                     "email": "same@example.com",
                     "email_confirmed_at": "2026-01-01" if self.confirmed else None,
                     "user_metadata": {"name": "Alice"},
-                    "identities": [{"provider": "google"}, {"provider": "email"}],
+                    "identities": [{"provider": "email"}],
                 },
-            )
-        if path == "/user/identities/authorize":
-            assert request.headers["Authorization"] == "Bearer access"
-            return httpx.Response(
-                200, json={"url": "https://accounts.google.com/o/oauth2/auth"}
             )
         if path == "/logout":
             return httpx.Response(204)
@@ -116,7 +115,7 @@ def test_cookie_login_stable_identity_and_no_browser_tokens(auth):
     client, repo, _, _ = auth
     response = login(client)
     player = response.json()["player_id"]
-    assert response.json()["providers"] == ["email", "google"]
+    assert response.json()["providers"] == ["email"]
     assert "token" not in response.json()
     assert "HttpOnly" in response.headers["set-cookie"]
     assert "SameSite=lax" in response.headers["set-cookie"]
@@ -188,57 +187,44 @@ def test_csrf_checks_login_and_authenticated_game_writes(auth):
     )
 
 
-def test_google_pkce_callback_is_browser_bound_one_time_and_stable(auth):
-    client, repo, _, service = auth
-    first = login(client).json()["player_id"]
-    response = client.post("/auth/google", json={})
-    params = parse_qs(urlsplit(response.json()["url"]).query)
-    assert params["provider"] == ["google"]
-    assert params["code_challenge_method"] == ["s256"]
-    assert params["redirect_to"] == ["http://testserver/api/auth/callback"]
-    flow = client.cookies["ofc_auth_flow"]
-    with repo.transaction() as u:
-        row = u.session.get(AuthFlowRow, digest(flow))
-        verifier = service.decrypt(row.verifier)
-        import base64
-
-        expected = (
-            base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-            .decode()
-            .rstrip("=")
-        )
-        assert params["code_challenge"] == [expected]
-    with TestClient(client.app) as stranger:
-        assert (
-            "auth_error"
-            in stranger.get(
-                "/auth/callback?code=valid", follow_redirects=False
-            ).headers["location"]
-        )
-    response = client.get("/auth/callback?code=valid", follow_redirects=False)
-    assert response.status_code == 303
-    assert "auth=success" in response.headers["location"]
-    assert client.get("/auth/session").json()["player_id"] == first
-    client.cookies.set("ofc_auth_flow", flow)
-    assert (
-        "auth_error"
-        in client.get("/auth/callback?code=valid", follow_redirects=False).headers[
-            "location"
-        ]
-    )
+def test_signup_signs_in_immediately_without_email_flow(auth):
+    client, _, fake, _ = auth
+    response = client.post("/auth/signup", json={
+        "email": "alice@example.com", "password": "correct-password", "name": "Alice"
+    })
+    assert response.status_code == 200
+    player = response.json()["player_id"]
+    assert "ofc_session" in client.cookies
+    assert "ofc_auth_flow" not in client.cookies
+    assert "access_token" not in response.text
+    assert client.get("/auth/session").json()["player_id"] == player
+    body = next(body for _, path, body in fake.calls if path == "/auth/v1/signup")
+    assert "code_challenge" not in body
+    assert client.post("/auth/logout").status_code == 200
+    assert login(client).json()["player_id"] == player
 
 
-def test_recovery_is_restricted_and_password_change_revokes_sessions(auth):
+def test_signup_with_confirmation_enabled_reports_configuration_error(auth):
+    client, _, fake, _ = auth
+    fake.confirmation_required = True
+    response = client.post("/auth/signup", json={
+        "email": "alice@example.com", "password": "correct-password", "name": "Alice"
+    })
+    assert response.status_code == 503
+    assert "ofc_session" not in client.cookies
+    assert "contact the administrator" in response.json()["detail"]
+
+
+def test_email_delivery_endpoints_are_removed(auth):
+    client, _, _, _ = auth
+    assert client.post("/auth/recover", json={"email": "a@example.com"}).status_code == 404
+    assert client.get("/auth/callback?code=valid").status_code == 404
+
+
+def test_password_change_revokes_sessions(auth):
     client, _, fake, _ = auth
     login(client)
     old_token = client.cookies["ofc_session"]
-    response = client.post("/auth/recover", json={"email": "a@example.com"})
-    assert response.status_code == 200
-    assert "reset link" in response.json()["message"]
-    response = client.get("/auth/callback?code=valid", follow_redirects=False)
-    assert "auth=recovery" in response.headers["location"]
-    assert client.get("/auth/session").json()["recovery"]
-    assert client.post("/games", json={"name": "x"}).status_code == 403
     assert (
         client.post(
             "/auth/password", json={"password": "new-secure-password"}
@@ -292,24 +278,16 @@ def test_signup_and_password_validation_do_not_echo_password(auth):
     )
     assert response.status_code == 200
     body = next(body for _, path, body in fake.calls if path == "/auth/v1/signup")
-    assert body["code_challenge_method"] == "s256"
+    assert "code_challenge" not in body
     assert "short-secret" not in response.text
     response = client.post("/auth/password", json={"password": "secret"})
     assert response.status_code == 422
     assert "secret" not in response.text
 
 
-def test_google_link_requires_recent_login_and_same_account(auth):
-    client, _, fake, service = auth
-    login(client)
-    response = client.post("/auth/google", json={"link": True})
-    assert response.json()["url"].startswith("https://accounts.google.com/")
-    fake.user_id = fake.other_id
-    response = client.get("/auth/callback?code=valid", follow_redirects=False)
-    assert "auth_error" in response.headers["location"]
-    now = service.clock()
-    service.clock = lambda: now + 601
-    assert client.post("/auth/google", json={"link": True}).status_code == 401
+def test_google_endpoint_is_not_available(auth):
+    client, _, _, _ = auth
+    assert client.post("/auth/google", json={}).status_code == 404
 
 
 def test_websocket_uses_cookie_and_rejects_other_origins(auth):

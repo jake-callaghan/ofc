@@ -2,7 +2,7 @@
 
 import os
 from dataclasses import dataclass
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import urlsplit
 
 import httpx
 from dotenv import dotenv_values
@@ -23,10 +23,6 @@ class AuthSettings:
     encryption_key: str
     origin: str
     session_seconds: int = 7 * 24 * 3600
-
-    @property
-    def callback(self):
-        return self.origin + "/api/auth/callback"
 
     @property
     def secure(self):
@@ -124,22 +120,3 @@ class SupabaseAuth:
 
     def user(self, token):
         return self.request("GET", "/user", token=token)
-
-    def google_url(self, challenge, access_token=None):
-        params = {
-            "provider": "google",
-            "redirect_to": self.settings.callback,
-            "code_challenge": challenge,
-            "code_challenge_method": "s256",
-            "scopes": "email profile",
-        }
-        if access_token:
-            params["skip_http_redirect"] = "true"
-            result = self.request(
-                "GET", "/user/identities/authorize", params=params, token=access_token
-            )
-            url = result.get("url", "")
-            if urlsplit(url).scheme != "https":
-                raise AuthError("Unable to connect Google. Please try again.")
-            return url
-        return self.settings.url + "/auth/v1/authorize?" + urlencode(params)
