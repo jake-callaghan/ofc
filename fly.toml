@@ -6,9 +6,13 @@ primary_region = "lhr"
 
 [env]
   OFC_STATIC_DIR = "/app/frontend/dist"
+  OFC_DATABASE_URL = "sqlite:////data/ofc.sqlite3"
+  OFC_SQLITE_VOLUME = "/data"
 
-[deploy]
-  release_command = "python -m ofc.schema upgrade"
+[[mounts]]
+  source = "ofc_local"
+  destination = "/data"
+  initial_size = "1gb"
 
 [http_service]
   internal_port = 8080

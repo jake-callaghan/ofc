@@ -218,9 +218,16 @@ operations. ORM entities, SQL queries, locks, and connection management stay in
 the adapter. `create_app(repository=...)` accepts a custom adapter; the caller
 owns its lifecycle. The default composition root constructs a SQLAlchemy adapter.
 
-## Supabase PostgreSQL
+## Deployment storage
 
-The main game database uses Supabase PostgreSQL, in the private `ofc` schema.
+Production uses SQLite at `/data/ofc.sqlite3` on a persistent Fly volume, with
+one app Machine. `python -m ofc.startup` validates the mount, enables WAL and runs
+migrations before starting the web server. Supabase still handles authentication.
+See the root README for deployment and backup details.
+
+## Optional PostgreSQL
+
+The adapter also supports PostgreSQL in the private `ofc` schema.
 Supabase's `auth`, `storage`, and `public` schemas are outside Alembic's scope.
 The app accesses game data through SQLAlchemy; do not expose `ofc` through the
 Supabase Data API. Migrations revoke schema access from PUBLIC and, when present,
