@@ -41,7 +41,9 @@ export function useGame(id, token) {
       socket = new WebSocket(
         `${protocol}//${location.host}/api/games/${id}/events`,
       );
-      socket.onopen = () => socket.send(JSON.stringify({ token }));
+      socket.onopen = () => {
+        if (token) socket.send(JSON.stringify({ token }));
+      };
       socket.onmessage = (event) => {
         if (stopped) return;
         try {
@@ -59,8 +61,13 @@ export function useGame(id, token) {
         if (stopped) return;
         setConnection('offline');
         if (event.code === 1008) {
+          if (!token)
+            api('/auth/session').catch((e) => {
+              if (e.status === 401)
+                window.dispatchEvent(new Event('ofc-session-expired'));
+            });
           setError(
-            'This identity cannot access the table. Check your invitation or player token.',
+            'This account cannot access the table, or your session has expired.',
           );
           return;
         }

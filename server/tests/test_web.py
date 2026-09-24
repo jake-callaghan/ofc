@@ -3,6 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from ofc.schema import upgrade
 from ofc.web import create_app
 
 
@@ -13,7 +14,10 @@ def test_production_static_api_and_websocket(tmp_path):
     (static / "assets").mkdir()
     (static / "assets" / "app.js").write_text("console.log('poker')")
     database_url = f"sqlite:///{tmp_path / 'game.sqlite3'}"
-    app = create_app(static_dir=static, database_url=database_url)
+    upgrade(database_url)
+    app = create_app(
+        static_dir=static, database_url=database_url, allow_legacy_keys=True
+    )
     with TestClient(app) as client:
         assert client.get("/").text == "<html>poker</html>"
         assert client.get("/assets/app.js").status_code == 200
@@ -34,7 +38,9 @@ def test_production_static_api_and_websocket(tmp_path):
             assert socket.receive_json()["type"] == "snapshot"
 
     # restarting the production app must reopen the same persistent database.
-    with TestClient(create_app(static_dir=static, database_url=database_url)) as client:
+    with TestClient(
+        create_app(static_dir=static, database_url=database_url, allow_legacy_keys=True)
+    ) as client:
         response = client.get(
             f"/api/games/{game_id}",
             headers={"Authorization": f"Bearer {player['token']}"},

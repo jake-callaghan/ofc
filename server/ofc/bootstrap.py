@@ -2,6 +2,7 @@
 
 import os
 
+from ofc.database import database_url as configured_database_url
 from ofc.persistence.sqlalchemy import SQLAlchemyRepository
 
 
@@ -17,11 +18,13 @@ def build_cpu():
 
 
 def build_repository(database_url: str | None = None) -> SQLAlchemyRepository:
-    url = database_url or os.environ.get(
-        "OFC_DATABASE_URL", "sqlite:///data/ofc.sqlite3"
-    )
+    url = database_url or configured_database_url()
     repository = SQLAlchemyRepository(url)
-    # local development is zero-setup; managed sql deployments run migrations.
-    if repository.sqlite:
-        repository.create_schema()
+    from ofc.schema import check_revision
+
+    try:
+        check_revision(repository.engine)
+    except Exception:
+        repository.close()
+        raise
     return repository

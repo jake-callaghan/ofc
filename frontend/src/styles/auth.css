@@ -1,0 +1,21 @@
+.welcome-form > .secondary {
+  width: 100%;
+  margin-top: 12px;
+}
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+.welcome-form form label + label {
+  margin-top: 16px;
+}
+@media (max-width: 650px) {
+  .header-right {
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

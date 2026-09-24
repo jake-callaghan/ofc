@@ -1,11 +1,11 @@
 from copy import deepcopy
 
 import pytest
+from db_helpers import create_app
 from fastapi.testclient import TestClient
 from test_engine import game
 from test_orbits import finish
 
-from ofc.api import create_app
 from ofc.engine import start_hand, transition
 from ofc.rules import DECK, RuleError, Rules
 

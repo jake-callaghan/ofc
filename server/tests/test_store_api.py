@@ -2,11 +2,10 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
 import pytest
+from db_helpers import build_repository, create_app
 from fastapi.testclient import TestClient
 from test_engine import auto_command
 
-from ofc.api import create_app
-from ofc.bootstrap import build_repository
 from ofc.rules import Rules
 from ofc.store import Conflict, Store
 

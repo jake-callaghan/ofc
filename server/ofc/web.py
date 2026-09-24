@@ -10,11 +10,18 @@ from fastapi.staticfiles import StaticFiles
 from ofc.api import create_app as create_api
 
 
-def create_app(*, static_dir: str | Path | None = None, database_url: str | None = None):
-    api = create_api(database_url)
+def create_app(
+    *,
+    static_dir: str | Path | None = None,
+    database_url: str | None = None,
+    allow_legacy_keys: bool = False,
+):
+    api = create_api(database_url, allow_legacy_keys=allow_legacy_keys)
     directory = Path(static_dir or os.environ.get("OFC_STATIC_DIR", "../frontend/dist"))
     if not (directory / "index.html").is_file():
-        raise RuntimeError(f"frontend build missing in {directory}; run pnpm build first")
+        raise RuntimeError(
+            f"frontend build missing in {directory}; run pnpm build first"
+        )
 
     @asynccontextmanager
     async def lifespan(app):

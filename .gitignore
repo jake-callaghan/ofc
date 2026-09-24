@@ -12,3 +12,6 @@ work/
 .pnpm-store/
 .history/
 training/checkpoints/
+.env
+.env.*
+!.env.example

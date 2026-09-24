@@ -5,12 +5,10 @@ primary_region = "lhr"
   dockerfile = "Dockerfile"
 
 [env]
-  OFC_DATABASE_URL = "sqlite:////data/ofc.sqlite3"
   OFC_STATIC_DIR = "/app/frontend/dist"
 
-[[mounts]]
-  source = "ofc_data"
-  destination = "/data"
+[deploy]
+  release_command = "python -m ofc.schema upgrade"
 
 [http_service]
   internal_port = 8080

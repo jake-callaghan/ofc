@@ -61,8 +61,11 @@ test('a later draw can be arranged early and confirmed when the turn arrives', a
   await expect(
     page.getByText('Place 2 · discard 1', { exact: true }),
   ).toBeVisible();
-  for (let i = 0; i < 2; i++) {
-    await page.locator('.draw-cards .card').first().click();
+  for (const name of ['A of clubs', 'A of diamonds']) {
+    await page
+      .locator('.draw-cards')
+      .getByRole('button', { name, exact: true })
+      .click();
     await page
       .locator('.my-table')
       .getByRole('button', {

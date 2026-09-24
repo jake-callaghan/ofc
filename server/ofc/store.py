@@ -79,6 +79,30 @@ class Store:
             record = self._load(uow, game_id)
             return self._view(uow, game_id, record.state, actor)
 
+    def shared_snapshot(self, game_id, previous=None):
+        """read once for all viewers; private projections happen after this read."""
+        with self.repository.transaction() as uow:
+            state = self._load(uow, game_id).state
+            revision = (state["version"], state.get("chat_version", 0))
+            if previous and previous["revision"] == revision:
+                return previous
+            balances = dict.fromkeys(state["members"], 0) | uow.balances(game_id)
+            names = uow.player_names(list(set(state["members"]) | set(balances)))
+            return {
+                "revision": revision,
+                "state": state,
+                "balances": balances,
+                "player_names": names,
+            }
+
+    @staticmethod
+    def snapshot_view(game_id, snapshot, actor):
+        view = public_view(snapshot["state"], actor)
+        view["game_id"] = game_id
+        view["balances"] = deepcopy(snapshot["balances"])
+        view["player_names"] = deepcopy(snapshot["player_names"])
+        return view
+
     def join(self, game_id: str, actor: str, request_id: str, invite: str) -> State:
         # invitation holders cannot read the table version until they are members.
         return self.command(
