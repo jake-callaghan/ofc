@@ -21,6 +21,7 @@ from ofc.auth_routes import SESSION_COOKIE
 from ofc.auth_routes import router as auth_router
 from ofc.auth_service import AuthService
 from ofc.bootstrap import build_repository
+from ofc.database import connection_url
 from ofc.game_updates import GameUpdates
 from ofc.persistence.ports import Repository
 from ofc.rules import RuleError, Rules
@@ -111,7 +112,19 @@ def create_app(
     repository: Repository | None = None,
     auth_provider=None,
     allow_legacy_keys: bool | None = None,
+    dev_login: bool = False,
 ):
+    if dev_login:
+        if os.environ.get("FLY_APP_NAME") or os.environ.get("OFC_SQLITE_VOLUME"):
+            raise RuntimeError("development login cannot run on the deployed server")
+        if (
+            repository is not None
+            or not database_url
+            or connection_url(database_url).get_backend_name() != "sqlite"
+        ):
+            raise RuntimeError(
+                "development login requires an explicit local SQLite database"
+            )
     if allow_legacy_keys is None:
         allow_legacy_keys = os.environ.get("OFC_ALLOW_LEGACY_KEYS") == "1"
 
@@ -122,10 +135,21 @@ def create_app(
         )
         app.state.store = Store(adapter)
         app.state.updates = GameUpdates(app.state.store)
-        settings = auth_provider.settings if auth_provider else AuthSettings.load()
-        provider = auth_provider or (SupabaseAuth(settings) if settings else None)
+        settings = (
+            None
+            if dev_login
+            else (auth_provider.settings if auth_provider else AuthSettings.load())
+        )
+        provider = (
+            None
+            if dev_login
+            else (auth_provider or (SupabaseAuth(settings) if settings else None))
+        )
         app.state.auth = AuthService(adapter, provider) if provider else None
-        app.state.allow_legacy_keys = allow_legacy_keys and provider is None
+        app.state.allow_legacy_keys = (
+            dev_login or allow_legacy_keys
+        ) and provider is None
+        app.state.dev_login = dev_login
 
         stopped = asyncio.Event()
 

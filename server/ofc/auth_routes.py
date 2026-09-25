@@ -52,6 +52,7 @@ def router():
         return {
             "enabled": request.app.state.auth is not None,
             "legacy": request.app.state.allow_legacy_keys,
+            "dev_login": request.app.state.dev_login,
         }
 
     @routes.get("/session")

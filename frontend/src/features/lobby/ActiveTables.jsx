@@ -70,6 +70,7 @@ export default function ActiveTables({ session, openGame }) {
               <tr>
                 <th>Table</th>
                 <th>Players</th>
+                <th>Location</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -88,6 +89,7 @@ export default function ActiveTables({ session, openGame }) {
                     </small>
                   </td>
                   <td>{table.member_count}</td>
+                  <td className="table-location">🇬🇧 London</td>
                   <td>
                     {table.phase === 'playing'
                       ? `Playing hand ${table.hand_number}`

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api } from '../../lib/api.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 import ActionButton from '../../components/ui/ActionButton.jsx';
-export default function Welcome({ onSession }) {
+export default function Welcome({ onSession, devLogin = false }) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,6 +38,12 @@ export default function Welcome({ onSession }) {
   return (
     <main className="welcome">
       <h1>Open-face Chinese poker</h1>
+      {devLogin && (
+        <p>
+          Local development · choose a display name to play. No email or
+          password required.
+        </p>
+      )}
       <form
         className="panel welcome-form"
         onSubmit={submit}

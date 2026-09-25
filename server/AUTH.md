@@ -87,3 +87,27 @@ Legacy player keys are disabled by default and do not become email accounts.
 Supabase authentication is not configured.
 
 Reference: [Supabase email confirmation configuration](https://supabase.com/docs/guides/auth/general-configuration).
+
+## Local login bypass
+
+For everyday development without Supabase or email/password login, run from the
+repository root:
+
+```sh
+uv run --directory server python -m ofc.dev
+```
+
+In a second terminal:
+
+```sh
+pnpm --dir frontend dev
+```
+
+Open `http://127.0.0.1:5173` and enter a display name. Use a separate browser
+profile or private window for a second player. The player key persists in that
+browser's local storage.
+
+This launcher migrates and uses only `server/data/development.sqlite3`, ignoring
+`OFC_DATABASE_URL` and all Supabase auth settings. It binds to loopback, supports
+backend reload, and refuses to run on Fly or with the production volume setting.
+The normal backend and production entrypoints do not enable this bypass.

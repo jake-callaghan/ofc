@@ -88,6 +88,11 @@ test('new tables default open and the owner can change access', async ({
   const host = await player(request, 'Settings host');
   await signIn(page, host);
   await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: 'Recent tables' }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel('Table access')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Create table', exact: true }).click();
   await expect(page.getByLabel('Table access')).toHaveValue('open');
   await page
     .getByLabel('Table name', { exact: true })

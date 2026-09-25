@@ -109,7 +109,10 @@ export default function App() {
       {!loading &&
         !session &&
         (config?.legacy && !config.enabled ? (
-          <GuestWelcome onSession={login} />
+          <GuestWelcome
+            onSession={login}
+            devLogin={config.dev_login}
+          />
         ) : (
           <Welcome
             onSession={login}

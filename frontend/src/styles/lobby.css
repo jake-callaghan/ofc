@@ -274,6 +274,24 @@
   display: flex;
   gap: 8px;
 }
+
+.table-location {
+  white-space: nowrap;
+}
 .lobby-table-actions button {
   padding: 8px 12px;
+}
+
+.lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+#table-setup {
+  margin-bottom: 24px;
+}
+.setup h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
 }
