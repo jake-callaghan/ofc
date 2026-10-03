@@ -51,9 +51,25 @@ class Store:
             raise Unauthorized("invalid player token")
         return player
 
-    def create(self, actor: str, name: str, rules: Rules, visibility="open") -> State:
+    def create(
+        self,
+        actor: str,
+        name: str,
+        rules: Rules,
+        visibility="open",
+        *,
+        unit_pence=10,
+        leaderboard_enabled=True,
+    ) -> State:
         game_id, invite = str(uuid4()), secrets.token_urlsafe(24)
-        state = new_game(actor, name, rules, visibility)
+        state = new_game(
+            actor,
+            name,
+            rules,
+            visibility,
+            unit_pence=unit_pence,
+            leaderboard_enabled=leaderboard_enabled,
+        )
         state["updated_at"] = self.clock()
         with self.repository.transaction(write=True) as uow:
             uow.add_game(GameRecord(game_id, self.digest(invite), state))
@@ -70,6 +86,7 @@ class Store:
         view = public_view(state, actor, allow_spectator=True)
         view["game_id"] = game_id
         view["balances"] = dict.fromkeys(state["members"], 0) | uow.balances(game_id)
+        view["gbp_balances"] = uow.gbp_balances(game_id)
         view["player_names"] = uow.player_names(
             list(set(state["members"]) | set(view["balances"]))
         )
@@ -93,6 +110,7 @@ class Store:
                 "revision": revision,
                 "state": state,
                 "balances": balances,
+                "gbp_balances": uow.gbp_balances(game_id),
                 "player_names": names,
             }
 
@@ -101,6 +119,7 @@ class Store:
         view = public_view(snapshot["state"], actor, allow_spectator=True)
         view["game_id"] = game_id
         view["balances"] = deepcopy(snapshot["balances"])
+        view["gbp_balances"] = deepcopy(snapshot["gbp_balances"])
         view["player_names"] = deepcopy(snapshot["player_names"])
         return view
 
@@ -114,6 +133,10 @@ class Store:
                 }
                 for game in uow.lobby_games()
             ]
+
+    def leaderboard(self, limit=50, offset=0):
+        with self.repository.transaction() as uow:
+            return uow.leaderboard(limit, offset)
 
     def join(
         self, game_id: str, actor: str, request_id: str, invite: str | None = None

@@ -11,6 +11,12 @@ Tables between hands are archived after eight hours without a move, settings
 change or chat activity. Cleanup runs once a minute while the server is running;
 active hands are never interrupted. Archived tables retain their history and scores.
 
+Tables default to **10p per unit**, with **50p** and **£1** options. The host can
+change the value or opt out of the global leaderboard between hands. Each hand
+keeps the settings it was dealt with. The leaderboard totals human players' net
+GBP from participating hands; historical hands without a recorded value are
+excluded. These are score equivalents, with no payment processing.
+
 ## Gameplay
 
 ![alt text](gameplay.gif)

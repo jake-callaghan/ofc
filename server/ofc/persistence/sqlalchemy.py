@@ -23,6 +23,7 @@ class SQLUnitOfWork:
         self.session = session
         self.write = write
         self.games = {}
+        self.balance_cache = {}
 
     def add_player(self, player_id: str, name: str, token_hash: str) -> None:
         self.session.add(PlayerRow(id=player_id, name=name, token_hash=token_hash))
@@ -74,6 +75,8 @@ class SQLUnitOfWork:
                 state["rules"]["variant"].as_string(),
                 state["hand"]["status"].as_string(),
                 state["hand_number"].as_integer(),
+                state["unit_pence"].as_integer(),
+                state["leaderboard_enabled"].as_boolean(),
             )
             .where(
                 state["status"].as_string() == "active",
@@ -90,8 +93,10 @@ class SQLUnitOfWork:
                 "variant": variant,
                 "phase": "playing" if hand_status == "playing" else "between_hands",
                 "hand_number": number,
+                "unit_pence": unit_pence if unit_pence is not None else 10,
+                "leaderboard_enabled": enabled if enabled is not None else True,
             }
-            for gid, name, visibility, members, variant, hand_status, number in rows
+            for gid, name, visibility, members, variant, hand_status, number, unit_pence, enabled in rows
         ]
 
     def due_game_ids(self, now: float) -> list[str]:
@@ -138,6 +143,8 @@ class SQLUnitOfWork:
         )
 
     def record_hand(self, game_id: str, hand: State, rules: State) -> None:
+        self.balance_cache.pop(game_id, None)
+        accounting = hand.get("accounting")
         self.session.add(
             HandRow(
                 game_id=game_id,
@@ -145,27 +152,48 @@ class SQLUnitOfWork:
                 result=deepcopy(hand["result"]),
                 boards=deepcopy(hand["boards"]),
                 rules=deepcopy(rules),
+                accounting=deepcopy(accounting),
             )
         )
         # insert the parent before its ledger entries; all stay in one transaction.
         self.session.flush()
         self.session.add_all(
             [
-                LedgerRow(game_id=game_id, hand=hand["number"], player=p, units=n)
+                LedgerRow(
+                    game_id=game_id,
+                    hand=hand["number"],
+                    player=p,
+                    units=n,
+                    amount_pence=n * accounting["unit_pence"] if accounting else None,
+                    leaderboard_pence=(
+                        n * accounting["unit_pence"]
+                        if accounting
+                        and accounting["leaderboard_enabled"]
+                        and p not in hand.get("cpu_players", [])
+                        else None
+                    ),
+                )
                 for p, n in hand["result"]["units"].items()
             ]
         )
 
     def balances(self, game_id: str) -> dict[str, int]:
         # postgres sum(bigint) returns decimal; ledger units are exact integers.
-        return {
-            player: int(units)
-            for player, units in self.session.execute(
-                select(LedgerRow.player, func.sum(LedgerRow.units))
+        return {player: int(units) for player, units, _ in self._ledger_totals(game_id)}
+
+    def _ledger_totals(self, game_id):
+        # both currencies share one aggregate within this transaction.
+        if game_id not in self.balance_cache:
+            self.balance_cache[game_id] = self.session.execute(
+                select(
+                    LedgerRow.player,
+                    func.sum(LedgerRow.units),
+                    func.sum(LedgerRow.amount_pence),
+                )
                 .where(LedgerRow.game_id == game_id)
                 .group_by(LedgerRow.player)
             ).all()
-        }
+        return self.balance_cache[game_id]
 
     def history(
         self,
@@ -193,9 +221,33 @@ class SQLUnitOfWork:
                     "result": r.result,
                     "boards": r.boards,
                     "rules": r.rules,
+                    "accounting": r.accounting,
                 }
             )
             for r in rows
+        ]
+
+    def gbp_balances(self, game_id: str) -> dict[str, int]:
+        return {
+            player: int(pence)
+            for player, _, pence in self._ledger_totals(game_id)
+            if pence is not None
+        }
+
+    def leaderboard(self, limit: int, offset: int) -> list[State]:
+        total = func.sum(LedgerRow.leaderboard_pence)
+        rows = self.session.execute(
+            select(LedgerRow.player, PlayerRow.name, total, func.count())
+            .join(PlayerRow, PlayerRow.id == LedgerRow.player)
+            .where(LedgerRow.leaderboard_pence.is_not(None))
+            .group_by(LedgerRow.player, PlayerRow.name)
+            .order_by(total.desc(), PlayerRow.name, LedgerRow.player)
+            .offset(offset)
+            .limit(limit)
+        )
+        return [
+            {"player_id": player, "name": name, "net_pence": int(pence), "hands": count}
+            for player, name, pence, count in rows
         ]
 
 

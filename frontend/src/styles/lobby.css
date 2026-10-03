@@ -298,6 +298,44 @@
   margin-bottom: 20px;
 }
 
+.unit-settings {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+  min-width: 0;
+}
+.unit-settings legend {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.unit-options {
+  display: flex;
+  gap: 10px;
+}
+.setup .unit-options .primary {
+  width: auto;
+}
+.leaderboard ol {
+  padding-left: 28px;
+}
+.leaderboard li {
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.leaderboard li > span {
+  display: inline-block;
+  max-width: 70%;
+  overflow-wrap: anywhere;
+}
+.leaderboard li > strong {
+  float: right;
+  font-variant-numeric: tabular-nums;
+}
+.leaderboard small {
+  display: block;
+  margin-top: 4px;
+}
+
 @media (max-width: 700px) {
   .lobby-table thead {
     position: absolute;

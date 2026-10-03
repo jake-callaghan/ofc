@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import ActiveTables from './ActiveTables.jsx';
+import Leaderboard from './Leaderboard.jsx';
+import UnitSettings from '../../components/UnitSettings.jsx';
 import { api } from '../../lib/api.js';
 import { capacity } from '../../lib/game.js';
 import { save } from '../../lib/storage.js';
@@ -10,6 +12,8 @@ import ActionButton from '../../components/ui/ActionButton.jsx';
 export default function Lobby({ session, openGame, pendingJoin }) {
   const [mode, setMode] = useState(pendingJoin ? 'join' : null);
   const [visibility, setVisibility] = useState('open');
+  const [unitPence, setUnitPence] = useState(10);
+  const [leaderboardEnabled, setLeaderboardEnabled] = useState(true);
   const [name, setName] = useState(() => randomTableName(session.name));
   const [rules, setRules] = useState({
     variant: 'pineapple',
@@ -39,6 +43,8 @@ export default function Lobby({ session, openGame, pendingJoin }) {
           name: name.trim(),
           rules,
           visibility,
+          unit_pence: unitPence,
+          leaderboard_enabled: leaderboardEnabled,
         });
         save(`ofc.invite.${result.game_id}`, result.invite);
         openGame(result.game_id, result.state.name);
@@ -121,6 +127,12 @@ export default function Lobby({ session, openGame, pendingJoin }) {
                     Both are visible in the lobby. Private tables require an
                     invite to join.
                   </p>
+                  <UnitSettings
+                    value={unitPence}
+                    onChange={setUnitPence}
+                    enabled={leaderboardEnabled}
+                    onEnabledChange={setLeaderboardEnabled}
+                  />
                   <label>Game</label>
                   <div className="variant-options">
                     {['pineapple', 'classic'].map((variant) => (
@@ -276,6 +288,7 @@ export default function Lobby({ session, openGame, pendingJoin }) {
         session={session}
         openGame={openGame}
       />
+      <Leaderboard session={session} />
     </main>
   );
 }

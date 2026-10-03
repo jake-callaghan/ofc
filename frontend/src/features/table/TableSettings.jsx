@@ -1,10 +1,17 @@
 import { useState } from 'react';
+import UnitSettings from '../../components/UnitSettings.jsx';
 
 export default function TableSettings({ game, busy, connection, command }) {
   const [visibility, setVisibility] = useState(game.visibility || 'private');
   const [timer, setTimer] = useState(game.rules.turn_seconds ?? '');
   const [orbits, setOrbits] = useState(game.rules.orbits ?? '');
+  const [unitPence, setUnitPence] = useState(game.unit_pence ?? 10);
+  const [leaderboardEnabled, setLeaderboardEnabled] = useState(
+    game.leaderboard_enabled ?? true,
+  );
   const changed =
+    unitPence !== (game.unit_pence ?? 10) ||
+    leaderboardEnabled !== (game.leaderboard_enabled ?? true) ||
     visibility !== (game.visibility || 'private') ||
     (timer === '' ? null : Number(timer)) !== game.rules.turn_seconds ||
     (orbits === '' ? null : Number(orbits)) !== game.rules.orbits;
@@ -14,6 +21,8 @@ export default function TableSettings({ game, busy, connection, command }) {
     command({
       type: 'update_settings',
       visibility,
+      unit_pence: unitPence,
+      leaderboard_enabled: leaderboardEnabled,
       turn_seconds: timer === '' ? null : Number(timer),
       orbits: orbits === '' ? null : Number(orbits),
     });
@@ -23,6 +32,16 @@ export default function TableSettings({ game, busy, connection, command }) {
     <details className="panel table-settings">
       <summary>Table settings</summary>
       <form onSubmit={submit}>
+        <UnitSettings
+          value={unitPence}
+          onChange={setUnitPence}
+          enabled={leaderboardEnabled}
+          onEnabledChange={setLeaderboardEnabled}
+        />
+        <p className="hint">
+          Applies to future hands. Earlier scores keep their original value and
+          leaderboard setting.
+        </p>
         <label>
           Table access
           <select

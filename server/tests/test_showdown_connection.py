@@ -19,7 +19,10 @@ def test_websocket_survives_showdown_and_next_hand(tmp_path, monkeypatch):
         if "sum(ledger.units)" not in str(statement):
             return result
         # postgres sum(bigint) returns numeric, which psycopg exposes as decimal.
-        rows = [(player, Decimal(units)) for player, units in result.all()]
+        rows = [
+            (player, Decimal(units), Decimal(pence) if pence is not None else None)
+            for player, units, pence in result.all()
+        ]
 
         class Totals:
             def all(self):

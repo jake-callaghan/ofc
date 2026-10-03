@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
+import { unitValue } from '../../lib/money.js';
 
 export default function ActiveTables({ session, openGame }) {
   const [tables, setTables] = useState(null);
@@ -86,6 +87,9 @@ export default function ActiveTables({ session, openGame }) {
                         ? 'Open'
                         : 'Private · invite-only'}
                       {table.is_member ? ' · Your table' : ''}
+                      {' · '}
+                      {unitValue(table.unit_pence ?? 10)}/unit
+                      {table.leaderboard_enabled === false ? ' · Unranked' : ''}
                     </small>
                   </td>
                   <td data-label="Players">{table.member_count}</td>

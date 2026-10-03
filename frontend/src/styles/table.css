@@ -279,6 +279,12 @@
   text-align: right;
   color: #967937;
 }
+.header-score .gbp-score {
+  grid-column: 2;
+  text-align: right;
+  margin-left: 0;
+  font-variant-numeric: tabular-nums;
+}
 .discard-label {
   font-size: 11px;
   color: #bdcaaa;

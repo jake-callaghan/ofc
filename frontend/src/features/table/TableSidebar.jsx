@@ -44,7 +44,7 @@ export default function TableSidebar({
         game.status !== 'closed' &&
         (!hand || hand.status === 'complete') && (
           <TableSettings
-            key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}:${game.visibility}`}
+            key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}:${game.visibility}:${game.unit_pence}:${game.leaderboard_enabled}`}
             game={game}
             busy={busy}
             connection={connection}

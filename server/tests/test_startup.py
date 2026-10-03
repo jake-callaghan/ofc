@@ -16,7 +16,7 @@ def test_startup_migrates_and_preserves_sqlite_on_restart(tmp_path, monkeypatch)
         assert db.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
         assert (
             db.execute("SELECT version_num FROM alembic_version").fetchone()[0]
-            == "0002"
+            == "0003"
         )
         db.execute(
             "INSERT INTO players (id, name, token_hash) VALUES ('alice', 'Alice', NULL)"

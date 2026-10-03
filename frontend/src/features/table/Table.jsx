@@ -8,6 +8,7 @@ import TableHand from './TableHand.jsx';
 import TurnTimer from './TurnTimer.jsx';
 import HeaderScores from './HeaderScores.jsx';
 import TableChat from './TableChat.jsx';
+import { unitValue } from '../../lib/money.js';
 export default function Table({ id, session, home }) {
   const { game, connection, error, busy, command } = useGame(id, session.token);
   const [seats, setSeats] = useState(null);
@@ -64,6 +65,12 @@ export default function Table({ id, session, home }) {
           <h1>{game.name}</h1>
           <div className="table-subtitle">
             <span className="variant-name">{game.rules.variant}</span>
+            <span>
+              {unitValue(game.unit_pence ?? 10)}/unit ·{' '}
+              {game.leaderboard_enabled === false
+                ? 'Unranked'
+                : 'Global leaderboard'}
+            </span>
             <span>
               {game.visibility === 'open' ? 'Open' : 'Private · invite-only'}
             </span>

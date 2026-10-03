@@ -7,14 +7,26 @@ from random import SystemRandom
 from ofc.rules import DECK, ROWS, RuleError, Rules, next_fantasy, settle
 
 
-def new_game(owner, name, rules, visibility="open"):
+def validate_accounting(unit_pence, leaderboard_enabled):
+    if type(unit_pence) is not int or unit_pence not in {10, 50, 100}:
+        raise RuleError("unit value must be 10p, 50p or £1")
+    if type(leaderboard_enabled) is not bool:
+        raise RuleError("leaderboard participation must be a boolean")
+
+
+def new_game(
+    owner, name, rules, visibility="open", *, unit_pence=10, leaderboard_enabled=True
+):
     if not name.strip():
         raise RuleError("game name cannot be empty")
     if visibility not in {"open", "private"}:
         raise RuleError("invalid table visibility")
+    validate_accounting(unit_pence, leaderboard_enabled)
     return {
         "name": name,
         "visibility": visibility,
+        "unit_pence": unit_pence,
+        "leaderboard_enabled": leaderboard_enabled,
         "owner": owner,
         "rules": asdict(rules),
         "members": [owner],
@@ -81,6 +93,11 @@ def start_hand(game, actor, players, deck=None):
         "queue": [],
         "fantasy_pending": [p for p in players if fantasies[p]],
         "result": None,
+        "accounting": {
+            "unit_pence": game.get("unit_pence", 10),
+            "leaderboard_enabled": game.get("leaderboard_enabled", True),
+        },
+        "cpu_players": list(game.get("cpu_players", [])),
     }
     # fantasy submissions run independently of the normal turn queue.
     normal = [p for p in players if not fantasies[p]]
@@ -226,6 +243,16 @@ def transition(game, actor, command):
                 }
             )
             state["rules"] = asdict(rules)
+            unit_pence = command.get("unit_pence")
+            enabled = command.get("leaderboard_enabled")
+            unit_pence = (
+                state.get("unit_pence", 10) if unit_pence is None else unit_pence
+            )
+            enabled = (
+                state.get("leaderboard_enabled", True) if enabled is None else enabled
+            )
+            validate_accounting(unit_pence, enabled)
+            state.update(unit_pence=unit_pence, leaderboard_enabled=enabled)
             if command.get("visibility") is not None:
                 if command["visibility"] not in {"open", "private"}:
                     raise RuleError("invalid table visibility")

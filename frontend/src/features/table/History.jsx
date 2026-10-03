@@ -4,6 +4,7 @@ import { units } from '../../lib/game.js';
 import Board from '../../components/cards/Board.jsx';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 import ScoreBreakdown from './ScoreBreakdown.jsx';
+import { pounds, unitValue } from '../../lib/money.js';
 export default function History({ game, token }) {
   const [hands, setHands] = useState([]),
     [error, setError] = useState(''),
@@ -59,11 +60,17 @@ export default function History({ game, token }) {
             <span>
               {Object.entries(hand.result.units)
                 .map(
-                  ([id, value]) => `${game.player_names[id]} ${units(value)}`,
+                  ([id, value]) =>
+                    `${game.player_names[id] ?? 'Former player'} ${units(value)}${hand.accounting ? ` (${pounds(value * hand.accounting.unit_pence)})` : ''}`,
                 )
                 .join(' · ')}
             </span>
           </summary>
+          <p className="hint">
+            {hand.accounting
+              ? `${unitValue(hand.accounting.unit_pence)}/unit · ${hand.accounting.leaderboard_enabled ? 'Counts towards global leaderboard' : 'Unranked'}`
+              : 'Historical hand · no GBP value recorded'}
+          </p>
           <ScoreBreakdown
             result={hand.result}
             names={game.player_names}

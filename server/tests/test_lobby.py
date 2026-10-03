@@ -40,6 +40,8 @@ def test_listing_includes_private_and_open_but_no_hidden_game_data(lobby):
             "hand_number",
             "member_count",
             "is_member",
+            "unit_pence",
+            "leaderboard_enabled",
         }
         for t in listed
     )

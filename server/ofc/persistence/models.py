@@ -48,6 +48,7 @@ class HandRow(Base):
     result: Mapped[dict[str, Any]] = mapped_column(JSON)
     boards: Mapped[dict[str, Any]] = mapped_column(JSON)
     rules: Mapped[dict[str, Any]] = mapped_column(JSON)
+    accounting: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
 
 class LedgerRow(Base):
@@ -59,6 +60,8 @@ class LedgerRow(Base):
     hand: Mapped[int] = mapped_column(Integer, primary_key=True)
     player: Mapped[str] = mapped_column(ForeignKey("players.id"), primary_key=True)
     units: Mapped[int] = mapped_column(BigInteger)
+    amount_pence: Mapped[int | None] = mapped_column(BigInteger)
+    leaderboard_pence: Mapped[int | None] = mapped_column(BigInteger)
 
 
 class AuthIdentityRow(Base):

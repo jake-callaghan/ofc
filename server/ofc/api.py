@@ -49,6 +49,8 @@ class GameInput(Model):
     name: str = Field(min_length=1, max_length=120)
     rules: RuleInput = Field(default_factory=RuleInput)
     visibility: Literal["open", "private"] = "open"
+    unit_pence: Literal[10, 50, 100] = 10
+    leaderboard_enabled: bool = True
 
 
 class Join(Model):
@@ -80,6 +82,8 @@ class UpdateSettings(Model):
     turn_seconds: int | None = Field(ge=10, le=300)
     orbits: int | None = Field(ge=1, le=100)
     visibility: Literal["open", "private"] | None = None
+    unit_pence: Literal[10, 50, 100] | None = None
+    leaderboard_enabled: bool | None = None
 
 
 class Place(Model):
@@ -291,12 +295,25 @@ def create_app(
     @app.post("/games", status_code=201)
     def create_game(body: GameInput, actor: Annotated[str, Depends(player)]):
         return store().create(
-            actor, body.name, Rules(**body.rules.model_dump()), body.visibility
+            actor,
+            body.name,
+            Rules(**body.rules.model_dump()),
+            body.visibility,
+            unit_pence=body.unit_pence,
+            leaderboard_enabled=body.leaderboard_enabled,
         )
 
     @app.get("/games")
     def lobby(actor: Annotated[str, Depends(player)]):
         return store().lobby(actor)
+
+    @app.get("/leaderboard")
+    def leaderboard(
+        actor: Annotated[str, Depends(player)],
+        limit: Annotated[int, Query(ge=1, le=100)] = 50,
+        offset: Annotated[int, Query(ge=0)] = 0,
+    ):
+        return store().leaderboard(limit, offset)
 
     @app.post("/games/{game_id}/join")
     def join_game(

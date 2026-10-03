@@ -114,6 +114,9 @@ def test_api_accepts_non_sql_repository():
         def balances(self, game_id):
             return {"alice": 42}
 
+        def gbp_balances(self, game_id):
+            return {"alice": 420}
+
         def player_names(self, players):
             return {"alice": "Alice"}
 
@@ -220,7 +223,7 @@ def test_postgres_schema_isolation_and_reset():
             assert connection.scalar(text(f'SELECT id FROM "{other}".keep_me')) == 42
             assert (
                 connection.scalar(text("SELECT version_num FROM ofc.alembic_version"))
-                == "0002"
+                == "0003"
             )
     finally:
         with engine.begin() as connection:
