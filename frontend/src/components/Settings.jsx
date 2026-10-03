@@ -4,7 +4,13 @@ import SuitColours from './SuitColours.jsx';
 import ThemePicker from './ThemePicker.jsx';
 import BackgroundMotion from './BackgroundMotion.jsx';
 
-export default function Settings({ session }) {
+export default function Settings({
+  session,
+  home,
+  account,
+  logout,
+  leaderboard,
+}) {
   const menu = useRef(null);
 
   useEffect(() => {
@@ -36,21 +42,52 @@ export default function Settings({ session }) {
     URL.revokeObjectURL(url);
   }
 
+  function choose(action) {
+    menu.current.open = false;
+    menu.current.querySelector('summary').focus();
+    action();
+  }
+
   return (
     <details
       className="settings"
       ref={menu}
     >
-      <summary>Settings</summary>
+      <summary>Menu</summary>
       <div className="settings-panel">
-        <div className="settings-heading">Preferences</div>
-        <div className="settings-row">
-          <span>Theme</span>
-          <ThemePicker />
+        {session && !session.recovery && (
+          <nav
+            className="menu-section menu-navigation"
+            aria-label="Main navigation"
+          >
+            <button onClick={() => choose(home)}>
+              Lobby <span aria-hidden="true">↗</span>
+            </button>
+            <button
+              onClick={() => choose(leaderboard)}
+              aria-haspopup="dialog"
+            >
+              Leaderboard <span aria-hidden="true">↗</span>
+            </button>
+          </nav>
+        )}
+        <div className="menu-section menu-preferences">
+          <div className="settings-heading">Preferences</div>
+          <div className="settings-row">
+            <span>Theme</span>
+            <ThemePicker />
+          </div>
+          <BackgroundMotion />
+          <SuitColours />
+          <InstallApp />
         </div>
-        <BackgroundMotion />
-        <SuitColours />
-        <InstallApp />
+        {session && !session.token && (
+          <div className="menu-section menu-navigation">
+            <div className="settings-heading">Your account</div>
+            <button onClick={() => choose(account)}>Account</button>
+            <button onClick={() => choose(logout)}>Sign out</button>
+          </div>
+        )}
         {session?.token && (
           <button
             className="text-button player-key-download"

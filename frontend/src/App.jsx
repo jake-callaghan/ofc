@@ -11,12 +11,14 @@ import { api } from './lib/api.js';
 import ErrorMessage from './components/ErrorMessage.jsx';
 import Lobby from './features/lobby/Lobby.jsx';
 import Table from './features/table/Table.jsx';
+import LeaderboardModal from './features/lobby/LeaderboardModal.jsx';
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState(null);
   const [error, setError] = useState('');
   const [accountOpen, setAccountOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [notice, setNotice] = useState('');
   useEffect(() => {
     let active = true;
@@ -45,6 +47,7 @@ export default function App() {
         if (active) setLoading(false);
       });
     const expired = () => {
+      setLeaderboardOpen(false);
       setSession(null);
       setAccountOpen(false);
       setError('Your session expired. Please sign in again.');
@@ -83,6 +86,8 @@ export default function App() {
     setNotice(message);
   }
   function home() {
+    setAccountOpen(false);
+    setLeaderboardOpen(false);
     location.hash = '';
     setPage({ id: null, join: null });
   }
@@ -99,6 +104,7 @@ export default function App() {
         home={home}
         account={() => setAccountOpen(true)}
         logout={logout}
+        leaderboard={() => setLeaderboardOpen(true)}
       />
       <ErrorMessage message={error} />
       {loading && (
@@ -143,6 +149,13 @@ export default function App() {
           session={session}
           openGame={openGame}
           pendingJoin={page.join}
+          leaderboard={() => setLeaderboardOpen(true)}
+        />
+      )}
+      {session && !session.recovery && leaderboardOpen && (
+        <LeaderboardModal
+          session={session}
+          onClose={() => setLeaderboardOpen(false)}
         />
       )}
       <Footer />

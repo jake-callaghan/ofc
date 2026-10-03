@@ -1,0 +1,105 @@
+.header-right {
+  gap: 16px;
+  flex-shrink: 0;
+}
+.identity-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-panel {
+  left: auto;
+  right: 0;
+  gap: 0;
+  padding: 8px 18px;
+}
+.menu-section {
+  padding: 16px 0;
+}
+.menu-section + .menu-section {
+  border-top: 1px solid var(--line);
+}
+.menu-preferences {
+  display: grid;
+  gap: 18px;
+}
+.menu-navigation {
+  display: grid;
+  gap: 4px;
+}
+.menu-navigation .settings-heading {
+  margin-bottom: 8px;
+}
+.menu-navigation button {
+  display: flex;
+  justify-content: space-between;
+  text-align: left;
+  background: none;
+  color: var(--ink);
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.menu-navigation button:hover {
+  background: var(--soft);
+}
+.lobby-leaderboard-button {
+  order: 1;
+  margin-left: auto;
+}
+.leaderboard-modal {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 28px;
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 24px 90px #0006;
+}
+.leaderboard-modal::backdrop {
+  background: #07100dcc;
+  backdrop-filter: blur(6px);
+}
+.modal-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.modal-heading h2 {
+  margin: 0;
+  font-size: 26px;
+}
+.modal-close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 26px;
+}
+@media (max-width: 650px) {
+  .header {
+    gap: 16px;
+  }
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+  .lobby-leaderboard-button {
+    margin-left: 0;
+  }
+  .leaderboard-modal {
+    padding: 20px;
+  }
+  .modal-heading h2 {
+    font-size: 22px;
+  }
+}

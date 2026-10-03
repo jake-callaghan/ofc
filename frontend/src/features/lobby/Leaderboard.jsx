@@ -37,8 +37,10 @@ export default function Leaderboard({ session }) {
   }, [session.token, offset]);
 
   return (
-    <section className="panel leaderboard">
-      <h2>Global leaderboard</h2>
+    <section
+      className="leaderboard"
+      aria-label="Leaderboard standings"
+    >
       <p className="hint">
         Net GBP from participating hands. CPU players and unpriced historical
         hands are excluded.

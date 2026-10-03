@@ -6,7 +6,13 @@ const brand = (
     <span>Open Face Chinese Poker</span>
   </>
 );
-export default function Header({ session, home, account, logout }) {
+export default function Header({
+  session,
+  home,
+  account,
+  logout,
+  leaderboard,
+}) {
   return (
     <header className="header">
       <button
@@ -16,31 +22,21 @@ export default function Header({ session, home, account, logout }) {
         {brand}
       </button>
       <div className="header-right">
-        <Settings session={session} />
-        {session && !session.token && (
-          <>
-            <button
-              className="text-button"
-              onClick={account}
-            >
-              Account
-            </button>
-            <button
-              className="text-button"
-              onClick={logout}
-            >
-              Sign out
-            </button>
-          </>
-        )}
         {session && (
           <span className="identity">
             <span className="avatar">
               {session.name.slice(0, 1).toUpperCase()}
             </span>
-            {session.name}
+            <span className="identity-name">{session.name}</span>
           </span>
         )}
+        <Settings
+          session={session}
+          home={home}
+          account={account}
+          logout={logout}
+          leaderboard={leaderboard}
+        />
       </div>
     </header>
   );

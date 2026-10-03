@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import ActiveTables from './ActiveTables.jsx';
-import Leaderboard from './Leaderboard.jsx';
 import UnitSettings from '../../components/UnitSettings.jsx';
 import { api } from '../../lib/api.js';
 import { capacity } from '../../lib/game.js';
@@ -9,7 +8,7 @@ import { invitation } from '../../lib/navigation.js';
 import { randomTableName } from '../../lib/tableName.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
 import ActionButton from '../../components/ui/ActionButton.jsx';
-export default function Lobby({ session, openGame, pendingJoin }) {
+export default function Lobby({ session, openGame, pendingJoin, leaderboard }) {
   const [mode, setMode] = useState(pendingJoin ? 'join' : null);
   const [visibility, setVisibility] = useState('open');
   const [unitPence, setUnitPence] = useState(10);
@@ -90,6 +89,13 @@ export default function Lobby({ session, openGame, pendingJoin }) {
           }}
         >
           Join with invite
+        </button>
+        <button
+          className="secondary lobby-leaderboard-button"
+          onClick={leaderboard}
+          aria-haspopup="dialog"
+        >
+          Leaderboard
         </button>
       </div>
       {mode && (
@@ -288,7 +294,6 @@ export default function Lobby({ session, openGame, pendingJoin }) {
         session={session}
         openGame={openGame}
       />
-      <Leaderboard session={session} />
     </main>
   );
 }

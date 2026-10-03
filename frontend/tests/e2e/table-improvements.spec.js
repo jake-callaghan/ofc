@@ -139,7 +139,9 @@ test('GBP settings, visible history and host closure work together', async ({
   await expect(page.locator('.active-tables')).not.toContainText(
     'GBP test table',
   );
-  await expect(page.locator('.leaderboard')).toContainText('GBP host');
+  await page.getByRole('button', { name: 'Leaderboard', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('GBP host');
+  await page.getByRole('button', { name: 'Close leaderboard' }).click();
   await page.screenshot({
     path: 'test-results/lobby-desktop.png',
     fullPage: true,
