@@ -249,6 +249,8 @@ class Store:
         ):
             uow.record_hand(game_id, hand, updated["rules"])
         updated["updated_at"] = self.clock()
+        if updated.get("status") == "closed" and previous.get("status") != "closed":
+            updated["closed_at"] = updated["updated_at"]
         uow.save_game(game_id, updated)
 
     def _expire_locked(self, uow, game_id, state):

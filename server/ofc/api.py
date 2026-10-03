@@ -72,6 +72,7 @@ class AddCPU(Model):
 
 class Leave(Model):
     type: Literal["leave"]
+    close_table: bool = False
 
 
 class UpdateSettings(Model):

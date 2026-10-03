@@ -240,6 +240,13 @@ def transition(game, actor, command):
         elif kind == "leave":
             if state["hand"] and state["hand"]["status"] == "playing":
                 raise RuleError("leave the table between hands")
+            close = command.get("close_table", False)
+            if type(close) is not bool:
+                raise RuleError("close_table must be a boolean")
+            if close:
+                if actor != state["owner"]:
+                    raise RuleError("only the owner may close the table")
+                state.update(status="closed", closed_reason="host")
             state["members"].remove(actor)
             if state["owner"] == actor:
                 state["owner"] = next(
@@ -250,6 +257,8 @@ def transition(game, actor, command):
                     ),
                     None,
                 )
+            if close:
+                state["owner"] = None
             state["button"] %= max(1, len(state["members"]))
             update_completion(state)
         elif kind == "place":

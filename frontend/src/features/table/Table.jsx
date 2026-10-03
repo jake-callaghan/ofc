@@ -11,6 +11,7 @@ import TableChat from './TableChat.jsx';
 export default function Table({ id, session, home }) {
   const { game, connection, error, busy, command } = useGame(id, session.token);
   const [seats, setSeats] = useState(null);
+  const [leaving, setLeaving] = useState(false);
   if (!game)
     return (
       <main className="loading panel">
@@ -24,8 +25,8 @@ export default function Table({ id, session, home }) {
         </button>
       </main>
     );
-  async function leaveTable() {
-    if (await command({ type: 'leave' })) {
+  async function leaveTable(closeTable = false) {
+    if (await command({ type: 'leave', close_table: closeTable })) {
       const key = `ofc.tables.${session.player_id}`;
       save(
         key,
@@ -88,17 +89,62 @@ export default function Table({ id, session, home }) {
           {member && (
             <button
               className="secondary"
-              disabled={busy || hand?.status === 'playing'}
+              disabled={
+                busy || connection !== 'live' || hand?.status === 'playing'
+              }
               title={
                 hand?.status === 'playing'
                   ? 'You can leave between hands'
                   : 'Remove yourself from this table'
               }
-              onClick={leaveTable}
+              aria-expanded={
+                game.owner === session.player_id ? leaving : undefined
+              }
+              onClick={() =>
+                game.owner === session.player_id && game.status !== 'closed'
+                  ? setLeaving(!leaving)
+                  : leaveTable()
+              }
             >
               Leave table
             </button>
           )}
+          {member &&
+            leaving &&
+            game.owner === session.player_id &&
+            game.status !== 'closed' && (
+              <div
+                className="panel leave-options"
+                role="group"
+                aria-label="Leave table options"
+              >
+                <p>Keep the table open for the other players?</p>
+                <button
+                  className="secondary"
+                  disabled={
+                    busy || connection !== 'live' || hand?.status === 'playing'
+                  }
+                  onClick={() => leaveTable()}
+                >
+                  Keep open & leave
+                </button>
+                <button
+                  className="secondary"
+                  disabled={
+                    busy || connection !== 'live' || hand?.status === 'playing'
+                  }
+                  onClick={() => leaveTable(true)}
+                >
+                  Close table & leave
+                </button>
+                <button
+                  className="text-button"
+                  onClick={() => setLeaving(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           {!member &&
             game.visibility === 'open' &&
             game.status === 'active' && (
