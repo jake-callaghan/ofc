@@ -45,7 +45,15 @@ class UnitOfWork(Protocol):
     ) -> None: ...
     def record_hand(self, game_id: str, hand: State, rules: State) -> None: ...
     def balances(self, game_id: str) -> dict[str, int]: ...
-    def history(self, game_id: str, after: int, limit: int) -> list[State]: ...
+    def history(
+        self,
+        game_id: str,
+        after: int,
+        limit: int,
+        *,
+        newest: bool = False,
+        before: int | None = None,
+    ) -> list[State]: ...
 
 
 class Repository(Protocol):

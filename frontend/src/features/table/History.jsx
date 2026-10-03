@@ -12,13 +12,14 @@ export default function History({ game, token }) {
   useEffect(() => {
     const controller = new AbortController();
     api(
-      `/games/${game.game_id}/hands?limit=50`,
+      `/games/${game.game_id}/hands?limit=50&newest=true`,
       token,
       undefined,
       controller.signal,
     )
       .then((items) => {
         setHands(items);
+        setError('');
         setMore(items.length === 50);
       })
       .catch((e) => {
@@ -30,7 +31,7 @@ export default function History({ game, token }) {
     setBusy(true);
     try {
       const items = await api(
-        `/games/${game.game_id}/hands?after=${hands.at(-1).number}&limit=50`,
+        `/games/${game.game_id}/hands?before=${hands.at(-1).number}&limit=50&newest=true`,
         token,
       );
       setHands([...hands, ...items]);
@@ -42,7 +43,10 @@ export default function History({ game, token }) {
     }
   }
   return (
-    <section className="panel history">
+    <section
+      className="panel history"
+      id="hand-history"
+    >
       <h2>Hand history</h2>
       <ErrorMessage message={error} />
       {!hands.length && (

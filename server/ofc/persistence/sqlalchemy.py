@@ -150,12 +150,24 @@ class SQLUnitOfWork:
             ).all()
         }
 
-    def history(self, game_id: str, after: int, limit: int) -> list[State]:
+    def history(
+        self,
+        game_id: str,
+        after: int,
+        limit: int,
+        *,
+        newest: bool = False,
+        before: int | None = None,
+    ) -> list[State]:
+        query = select(HandRow).where(
+            HandRow.game_id == game_id, HandRow.number > after
+        )
+        if before is not None:
+            query = query.where(HandRow.number < before)
         rows = self.session.scalars(
-            select(HandRow)
-            .where(HandRow.game_id == game_id, HandRow.number > after)
-            .order_by(HandRow.number)
-            .limit(limit)
+            query.order_by(HandRow.number.desc() if newest else HandRow.number).limit(
+                limit
+            )
         )
         return [
             deepcopy(

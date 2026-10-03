@@ -279,12 +279,19 @@ class Store:
                 )
 
     def history(
-        self, game_id: str, actor: str, after: int = 0, limit: int = 50
+        self,
+        game_id: str,
+        actor: str,
+        after: int = 0,
+        limit: int = 50,
+        *,
+        newest: bool = False,
+        before: int | None = None,
     ) -> list[State]:
         with self.repository.transaction() as uow:
             record = self._load(uow, game_id)
-            public_view(record.state, actor)
-            return uow.history(game_id, after, limit)
+            public_view(record.state, actor, allow_spectator=True)
+            return uow.history(game_id, after, limit, newest=newest, before=before)
 
     def chat_message(self, game_id, actor, request_id, text):
         text = text.strip()

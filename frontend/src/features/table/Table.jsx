@@ -10,7 +10,6 @@ import HeaderScores from './HeaderScores.jsx';
 import TableChat from './TableChat.jsx';
 export default function Table({ id, session, home }) {
   const { game, connection, error, busy, command } = useGame(id, session.token);
-  const [view, setView] = useState('table');
   const [seats, setSeats] = useState(null);
   if (!game)
     return (
@@ -37,8 +36,6 @@ export default function Table({ id, session, home }) {
   }
   const member = game.members.includes(session.player_id);
   const hand = game.hand;
-  const completedHands =
-    game.hand_number - (hand?.status === 'playing' ? 1 : 0);
   const handLabel = hand
     ? `HAND ${String(hand.number).padStart(2, '0')}`
     : 'A FRESH DECK';
@@ -165,39 +162,29 @@ export default function Table({ id, session, home }) {
       )}
       <div className="table-layout">
         <div className="table-main">
-          <nav className="tabs">
+          <div className="tabs">
             <button
-              className={view === 'table' ? 'active' : ''}
-              onClick={() => setView('table')}
+              onClick={() =>
+                document
+                  .getElementById('hand-history')
+                  ?.scrollIntoView({ block: 'start' })
+              }
             >
-              The table
+              Hand history
             </button>
-            {member && (
-              <button
-                className={view === 'history' ? 'active' : ''}
-                onClick={() => setView('history')}
-              >
-                Hand history <small>{completedHands}</small>
-              </button>
-            )}
             <span className="hand-number">{handLabel}</span>
-          </nav>
-          {member && view === 'history' && (
-            <History
-              game={game}
-              token={session.token}
-            />
-          )}
-
-          {view === 'table' && (
-            <TableHand
-              game={game}
-              session={session}
-              busy={busy}
-              connection={connection}
-              command={command}
-            />
-          )}
+          </div>
+          <TableHand
+            game={game}
+            session={session}
+            busy={busy}
+            connection={connection}
+            command={command}
+          />
+          <History
+            game={game}
+            token={session.token}
+          />
         </div>
         <TableSidebar
           game={game}

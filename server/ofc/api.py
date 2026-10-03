@@ -309,8 +309,12 @@ def create_app(
         actor: Annotated[str, Depends(player)],
         after: Annotated[int, Query(ge=0)] = 0,
         limit: Annotated[int, Query(ge=1, le=100)] = 50,
+        newest: bool = False,
+        before: Annotated[int | None, Query(ge=1)] = None,
     ):
-        return store().history(game_id, actor, after, limit)
+        return store().history(
+            game_id, actor, after, limit, newest=newest, before=before
+        )
 
     @app.post("/games/{game_id}/chat")
     def chat_message(
