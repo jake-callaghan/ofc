@@ -30,6 +30,7 @@ export default function UnitSettings({
         />
         Count towards the global leaderboard
       </label>
+      <p className="hint">Only hands played entirely by humans count.</p>
     </fieldset>
   );
 }

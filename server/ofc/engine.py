@@ -96,6 +96,7 @@ def start_hand(game, actor, players, deck=None):
         "accounting": {
             "unit_pence": game.get("unit_pence", 10),
             "leaderboard_enabled": game.get("leaderboard_enabled", True),
+            "cpu_involved": bool(set(players) & set(game.get("cpu_players", []))),
         },
         "cpu_players": list(game.get("cpu_players", [])),
     }

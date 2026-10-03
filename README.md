@@ -13,8 +13,9 @@ active hands are never interrupted. Archived tables retain their history and sco
 
 Tables default to **10p per unit**, with **50p** and **£1** options. The host can
 change the value or opt out of the global leaderboard between hands. Each hand
-keeps the settings it was dealt with. The leaderboard totals human players' net
-GBP from participating hands; historical hands without a recorded value are
+keeps the settings it was dealt with. The leaderboard totals net GBP from
+participating human-only hands. Any hand involving a CPU is excluded for everyone;
+CPUs sitting out do not affect eligibility. Historical hands without a recorded value are
 excluded. These are score equivalents, with no payment processing.
 
 ## Gameplay

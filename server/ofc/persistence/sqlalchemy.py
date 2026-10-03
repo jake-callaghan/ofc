@@ -145,6 +145,14 @@ class SQLUnitOfWork:
     def record_hand(self, game_id: str, hand: State, rules: State) -> None:
         self.balance_cache.pop(game_id, None)
         accounting = hand.get("accounting")
+        if accounting:
+            accounting = {
+                **accounting,
+                "cpu_involved": bool(
+                    accounting.get("cpu_involved")
+                    or set(hand["result"]["units"]) & set(hand.get("cpu_players", []))
+                ),
+            }
         self.session.add(
             HandRow(
                 game_id=game_id,
@@ -169,7 +177,7 @@ class SQLUnitOfWork:
                         n * accounting["unit_pence"]
                         if accounting
                         and accounting["leaderboard_enabled"]
-                        and p not in hand.get("cpu_players", [])
+                        and not accounting["cpu_involved"]
                         else None
                     ),
                 )

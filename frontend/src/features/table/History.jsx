@@ -68,7 +68,7 @@ export default function History({ game, token }) {
           </summary>
           <p className="hint">
             {hand.accounting
-              ? `${unitValue(hand.accounting.unit_pence)}/unit · ${hand.accounting.leaderboard_enabled ? 'Counts towards global leaderboard' : 'Unranked'}`
+              ? `${unitValue(hand.accounting.unit_pence)}/unit · ${hand.accounting.cpu_involved ? 'CPU hand · excluded from leaderboard' : hand.accounting.leaderboard_enabled ? 'Counts towards global leaderboard' : 'Unranked'}`
               : 'Historical hand · no GBP value recorded'}
           </p>
           <ScoreBreakdown

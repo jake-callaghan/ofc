@@ -35,7 +35,7 @@ def test_net_gbp_uses_each_hand_stake_and_participation(scores):
         with store.repository.transaction(write=True) as uow:
             hand = {
                 "number": 1,
-                "result": {"units": {a: amount, b: -amount, cpu: 0}},
+                "result": {"units": {a: amount, b: -amount}},
                 "boards": {},
                 "accounting": {"unit_pence": price, "leaderboard_enabled": enabled},
                 "cpu_players": [cpu],
@@ -52,6 +52,41 @@ def test_net_gbp_uses_each_hand_stake_and_participation(scores):
     ]
     assert store.leaderboard(limit=1, offset=1)[0]["player_id"] == a
     assert store.leaderboard(offset=2) == []
+
+
+@pytest.mark.parametrize("human_count", [1, 2])
+def test_cpu_hand_excludes_every_player_but_keeps_table_balances(scores, human_count):
+    store, a, b = scores
+    cpu = store.register("CPU")["player_id"]
+    gid = store.create(a, "Practice", Rules())["game_id"]
+    units = {a: 6, cpu: -6} if human_count == 1 else {a: 10, b: -4, cpu: -6}
+    with store.repository.transaction(write=True) as uow:
+        uow.record_hand(
+            gid,
+            {
+                "number": 1,
+                "result": {"units": units},
+                "boards": {},
+                "accounting": {"unit_pence": 10, "leaderboard_enabled": True},
+                "cpu_players": [cpu],
+            },
+            {},
+        )
+    assert store.leaderboard() == []
+    assert store.get(gid, a)["balances"] == units
+    assert store.get(gid, a)["gbp_balances"] == {p: n * 10 for p, n in units.items()}
+    assert store.history(gid, a)[0]["accounting"]["cpu_involved"] is True
+
+
+def test_cpu_participation_is_frozen_at_deal():
+    state = new_game("a", "Practice", Rules())
+    state["members"] = ["a", "b", "cpu"]
+    state["cpu_players"] = ["cpu"]
+    start_hand(state, "a", ["a", "b"], DECK)
+    assert state["hand"]["accounting"]["cpu_involved"] is False
+    state["hand"] = None
+    start_hand(state, "a", ["a", "cpu"], DECK)
+    assert state["hand"]["accounting"]["cpu_involved"] is True
 
 
 def test_settlement_retries_and_settings_do_not_reprice_history(scores):
@@ -87,13 +122,18 @@ def test_settlement_retries_and_settings_do_not_reprice_history(scores):
     )
     assert store.leaderboard() == ranked
     history = store.history(gid, a)
-    assert history[0]["accounting"] == {"unit_pence": 50, "leaderboard_enabled": True}
+    assert history[0]["accounting"] == {
+        "unit_pence": 50,
+        "leaderboard_enabled": True,
+        "cpu_involved": False,
+    }
     result = store.command(
         gid, a, "next", state["version"] + 1, {"type": "start", "players": [a, b]}
     )
     assert result["state"]["hand"]["accounting"] == {
         "unit_pence": 100,
         "leaderboard_enabled": False,
+        "cpu_involved": False,
     }
 
 
@@ -115,6 +155,7 @@ def test_settings_only_owner_between_hands():
     assert state["hand"]["accounting"] == {
         "unit_pence": 10,
         "leaderboard_enabled": True,
+        "cpu_involved": False,
     }
 
 

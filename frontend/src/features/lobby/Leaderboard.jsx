@@ -42,8 +42,8 @@ export default function Leaderboard({ session }) {
       aria-label="Leaderboard standings"
     >
       <p className="hint">
-        Net GBP from participating hands. CPU players and unpriced historical
-        hands are excluded.
+        Net GBP from participating human-only hands. Hands involving a CPU and
+        unpriced historical hands are excluded.
       </p>
       <ErrorMessage message={error} />
       {!players ? (
