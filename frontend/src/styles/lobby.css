@@ -70,9 +70,9 @@
   margin-left: -10px;
 }
 .lobby {
-  max-width: 840px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 55px 30px 75px;
+  padding: 32px 30px 60px;
 }
 .page-intro {
   margin-bottom: 35px;
@@ -262,7 +262,7 @@
   font-weight: 500;
 }
 .lobby-table td:first-child {
-  min-width: 150px;
+  width: 40%;
   overflow-wrap: anywhere;
 }
 .lobby-table small {
@@ -272,6 +272,7 @@
 }
 .lobby-table-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -289,9 +290,40 @@
   margin-bottom: 24px;
 }
 #table-setup {
+  max-width: 720px;
   margin-bottom: 24px;
 }
 .setup h2 {
   margin-top: 0;
   margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+  .lobby-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .lobby-table tbody,
+  .lobby-table tr,
+  .lobby-table td {
+    display: block;
+  }
+  .lobby-table tr {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .lobby-table td {
+    padding: 6px 0;
+    border: 0;
+  }
+  .lobby-table td:first-child {
+    width: auto;
+  }
+  .lobby-table td[data-label]::before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+  }
 }

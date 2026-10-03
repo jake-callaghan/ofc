@@ -88,9 +88,14 @@ export default function ActiveTables({ session, openGame }) {
                       {table.is_member ? ' · Your table' : ''}
                     </small>
                   </td>
-                  <td>{table.member_count}</td>
-                  <td className="table-location">🇬🇧 London</td>
-                  <td>
+                  <td data-label="Players">{table.member_count}</td>
+                  <td
+                    className="table-location"
+                    data-label="Location"
+                  >
+                    🇬🇧 London
+                  </td>
+                  <td data-label="Status">
                     {table.phase === 'playing'
                       ? `Playing hand ${table.hand_number}`
                       : 'Between hands'}
