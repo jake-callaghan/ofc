@@ -39,6 +39,10 @@ class UnitOfWork(Protocol):
         """find expired deadlines; callers must lock and recheck before writing."""
         ...
 
+    def inactive_game_ids(self, cutoff: float, limit: int = 500) -> list[str]:
+        """candidate ids only; lock and recheck age and phase before archiving."""
+        ...
+
     def receipt(self, game_id: str, actor: str, request_id: str) -> Receipt | None: ...
     def add_receipt(
         self, game_id: str, actor: str, request_id: str, receipt: Receipt

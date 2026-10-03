@@ -37,22 +37,38 @@ export default function TableSidebar({
 
   const names = game.player_names;
   const canStart =
-    game.status !== 'complete' && (!hand || hand.status === 'complete');
+    game.status === 'active' && (!hand || hand.status === 'complete');
   return (
     <aside className="table-sidebar">
-      {owner && (!hand || hand.status === 'complete') && (
-        <TableSettings
-          key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}:${game.visibility}`}
-          game={game}
-          busy={busy}
-          connection={connection}
-          command={command}
-        />
-      )}
+      {owner &&
+        game.status !== 'closed' &&
+        (!hand || hand.status === 'complete') && (
+          <TableSettings
+            key={`${game.game_id}:${game.rules.turn_seconds}:${game.rules.orbits}:${game.visibility}`}
+            game={game}
+            busy={busy}
+            connection={connection}
+            command={command}
+          />
+        )}
       {game.status === 'complete' && (
         <section className="panel">
           <h2>Game complete</h2>
           <p>Orbit limit reached. Final scores are shown above.</p>
+        </section>
+      )}
+      {game.status === 'closed' && (
+        <section
+          className="panel"
+          role="status"
+        >
+          <h2>Table closed</h2>
+          <p>
+            {game.closed_reason === 'inactive'
+              ? 'Archived after 8 hours of inactivity.'
+              : 'Closed by the host.'}{' '}
+            Hand history and scores are still available.
+          </p>
         </section>
       )}
       {canStart && (
@@ -114,7 +130,7 @@ export default function TableSidebar({
           )}
         </section>
       )}
-      {share && (
+      {share && game.status !== 'closed' && (
         <section className="panel invite">
           <button
             className="secondary"

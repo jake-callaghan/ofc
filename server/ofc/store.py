@@ -54,6 +54,7 @@ class Store:
     def create(self, actor: str, name: str, rules: Rules, visibility="open") -> State:
         game_id, invite = str(uuid4()), secrets.token_urlsafe(24)
         state = new_game(actor, name, rules, visibility)
+        state["updated_at"] = self.clock()
         with self.repository.transaction(write=True) as uow:
             uow.add_game(GameRecord(game_id, self.digest(invite), state))
             view = self._view(uow, game_id, state, actor)
@@ -148,6 +149,8 @@ class Store:
                     if payload["type"] == "leave"
                     else self._view(uow, game_id, state, actor),
                 }
+            if state.get("status") == "closed" and command["type"] != "leave":
+                raise RuleError("this table is closed")
             if command["type"] == "join":
                 if state.get("status") == "complete":
                     raise RuleError("this game is complete")
@@ -236,8 +239,7 @@ class Store:
             set_deadline(state, self.clock())
         return state
 
-    @staticmethod
-    def _save(uow, game_id, previous, updated):
+    def _save(self, uow, game_id, previous, updated):
         hand = updated["hand"]
         if (
             hand
@@ -246,6 +248,7 @@ class Store:
             and previous["hand"]["status"] != "complete"
         ):
             uow.record_hand(game_id, hand, updated["rules"])
+        updated["updated_at"] = self.clock()
         uow.save_game(game_id, updated)
 
     def _expire_locked(self, uow, game_id, state):
@@ -293,6 +296,43 @@ class Store:
             public_view(record.state, actor, allow_spectator=True)
             return uow.history(game_id, after, limit, newest=newest, before=before)
 
+    def reap_inactive(self):
+        """archive idle tables without discarding their results or ledger entries."""
+        cutoff = self.clock() - 8 * 60 * 60
+        with self.repository.transaction() as uow:
+            candidates = uow.inactive_game_ids(cutoff)
+        closed = 0
+        for game_id in candidates:
+            try:
+                closed += self._reap_table(game_id)
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    "table cleanup failed for %s", game_id
+                )
+        return closed
+
+    def _reap_table(self, game_id):
+        with self.repository.transaction(write=True) as uow:
+            state = self._load(uow, game_id).state
+            now = self.clock()
+            if state.get("status") == "closed" or (
+                state["hand"] and state["hand"]["status"] == "playing"
+            ):
+                return False
+            if state.get("updated_at") is None:
+                # old tables get a full grace period because their age is unknown.
+                state["updated_at"] = now
+                uow.save_game(game_id, state)
+                return False
+            if state["updated_at"] > now - 8 * 60 * 60:
+                return False
+            state.update(
+                status="closed", closed_reason="inactive", closed_at=now, updated_at=now
+            )
+            state["version"] += 1
+            uow.save_game(game_id, state)
+            return True
+
     def chat_message(self, game_id, actor, request_id, text):
         text = text.strip()
         if not text or len(text) > 1000:
@@ -302,6 +342,8 @@ class Store:
             state = self._load(uow, game_id).state
             if actor not in state["members"]:
                 raise Unauthorized("not a member")
+            if state.get("status") == "closed":
+                raise RuleError("this table is closed")
             previous = uow.receipt(game_id, actor, request_id)
             if previous:
                 if previous.payload != payload:
@@ -320,6 +362,7 @@ class Store:
             )
             state["chat"] = messages[-100:]
             state["chat_version"] = state.get("chat_version", 0) + 1
+            state["updated_at"] = self.clock()
             uow.save_game(game_id, state)
             uow.add_receipt(
                 game_id, actor, request_id, Receipt(payload, state["version"])
@@ -333,6 +376,8 @@ class Store:
             state = self._load(uow, game_id).state
             if actor not in state["members"]:
                 raise Unauthorized("not a member")
+            if state.get("status") == "closed":
+                raise RuleError("this table is closed")
             message = next(
                 (m for m in state.get("chat", []) if m["id"] == message_id), None
             )
@@ -346,5 +391,6 @@ class Store:
             else:
                 message["reactions"][emoji] = [p for p in players if p != actor]
             state["chat_version"] = state.get("chat_version", 0) + 1
+            state["updated_at"] = self.clock()
             uow.save_game(game_id, state)
         return {"ok": True}

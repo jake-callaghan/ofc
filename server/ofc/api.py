@@ -164,12 +164,24 @@ def create_app(
                 except TimeoutError:
                     pass
 
+        async def cleanup():
+            while not stopped.is_set():
+                try:
+                    await run_in_threadpool(app.state.store.reap_inactive)
+                except Exception:
+                    logging.getLogger(__name__).exception("table cleanup scan failed")
+                try:
+                    await asyncio.wait_for(stopped.wait(), timeout=60)
+                except TimeoutError:
+                    pass
+
         timer_task = asyncio.create_task(timers())
+        cleanup_task = asyncio.create_task(cleanup())
         try:
             yield
         finally:
             stopped.set()
-            await timer_task
+            await asyncio.gather(timer_task, cleanup_task)
             if provider and auth_provider is None:
                 provider.close()
             if repository is None:

@@ -58,9 +58,7 @@ def router():
     @routes.get("/session")
     def session(request: Request):
         auth = service(request)
-        profile, _ = auth.session(
-            request.cookies.get(SESSION_COOKIE)
-        )
+        profile, _ = auth.session(request.cookies.get(SESSION_COOKIE))
         return profile
 
     @routes.post("/login")

@@ -30,6 +30,8 @@ def new_game(owner, name, rules, visibility="open"):
 
 
 def start_hand(game, actor, players, deck=None):
+    if game.get("status") == "closed":
+        raise RuleError("this table is closed")
     if actor != game["owner"]:
         raise RuleError("only the owner may start a hand")
     if game.get("status") == "complete":
@@ -184,6 +186,8 @@ def _finish_hand(game):
 
 
 def update_completion(game):
+    if game.get("status") == "closed":
+        return
     limit = game["rules"].get("orbits")
     size = game.get("orbit_size")
     if limit and size and game.get("normal_hands", 0) >= limit * size:
@@ -198,6 +202,8 @@ def transition(game, actor, command):
     """return a new state, leaving the original untouched on any error."""
     state = deepcopy(game)
     kind = command.get("type")
+    if state.get("status") == "closed" and kind != "leave":
+        raise RuleError("this table is closed")
     if kind == "join":
         if actor in state["members"]:
             raise RuleError("already a member")

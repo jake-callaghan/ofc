@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import deepcopy
 
-from sqlalchemy import event, func, select
+from sqlalchemy import event, func, or_, select
 from sqlalchemy.orm import Session
 
 from ofc.database import connection_url, create_database_engine
@@ -106,6 +106,23 @@ class SQLUnitOfWork:
     def receipt(self, game_id: str, actor: str, request_id: str) -> Receipt | None:
         row = self.session.get(CommandRow, (game_id, actor, request_id))
         return Receipt(deepcopy(row.payload), row.version) if row else None
+
+    def inactive_game_ids(self, cutoff: float, limit: int = 500) -> list[str]:
+        state = GameRow.state
+        updated = state["updated_at"].as_float()
+        phase = state["hand"]["status"].as_string()
+        return list(
+            self.session.scalars(
+                select(GameRow.id)
+                .where(
+                    state["status"].as_string().in_(["active", "complete"]),
+                    or_(phase.is_(None), phase != "playing"),
+                    or_(updated.is_(None), updated <= cutoff),
+                )
+                .order_by(updated, GameRow.id)
+                .limit(limit)
+            )
+        )
 
     def add_receipt(
         self, game_id: str, actor: str, request_id: str, receipt: Receipt

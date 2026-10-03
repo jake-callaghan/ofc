@@ -7,6 +7,10 @@ Multiplayer OFC with Pineapple, Fantasyland, house-rule royalties and CPU practi
 - [Frontend](frontend/README.md)
 - [CPU reinforcement learning](training/README.md)
 
+Tables between hands are archived after eight hours without a move, settings
+change or chat activity. Cleanup runs once a minute while the server is running;
+active hands are never interrupted. Archived tables retain their history and scores.
+
 ## Gameplay
 
 ![alt text](gameplay.gif)

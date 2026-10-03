@@ -101,7 +101,7 @@ export default function Table({ id, session, home }) {
           )}
           {!member &&
             game.visibility === 'open' &&
-            game.status !== 'complete' && (
+            game.status === 'active' && (
               <button
                 className="primary"
                 disabled={busy || connection !== 'live'}
@@ -124,7 +124,7 @@ export default function Table({ id, session, home }) {
         </div>
       </div>
       <ErrorMessage message={error} />
-      {member && (
+      {member && game.status !== 'closed' && (
         <TableChat
           key={id}
           game={game}
