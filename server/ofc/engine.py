@@ -8,8 +8,10 @@ from ofc.rules import DECK, ROWS, RuleError, Rules, next_fantasy, settle
 
 
 def validate_accounting(unit_pence, leaderboard_enabled):
-    if type(unit_pence) is not int or unit_pence not in {10, 50, 100}:
-        raise RuleError("unit value must be 10p, 50p or £1")
+    if type(unit_pence) is not int or not 1 <= unit_pence <= 1_000_000_000:
+        raise RuleError(
+            "unit value must be a whole number of pennies between 1 and 1000000000"
+        )
     if type(leaderboard_enabled) is not bool:
         raise RuleError("leaderboard participation must be a boolean")
 

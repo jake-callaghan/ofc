@@ -170,7 +170,7 @@ def test_api_defaults_validation_and_auth(tmp_path):
         ).json()["state"]
         assert default["unit_pence"] == 10
         assert default["leaderboard_enabled"] is True
-        for invalid in [0, 20, 99, "10", True]:
+        for invalid in [0, -1, 1.5, 1_000_000_001, "10", True]:
             assert (
                 client.post(
                     "/games",
@@ -179,7 +179,7 @@ def test_api_defaults_validation_and_auth(tmp_path):
                 ).status_code
                 == 422
             )
-        for price in [10, 50, 100]:
+        for price in [1, 10, 20, 99, 125, 2500]:
             response = client.post(
                 "/games",
                 headers=headers,
@@ -247,3 +247,25 @@ def test_units_migration_assumes_historical_10p_and_only_runs_once(tmp_path):
         assert row["net_units"] == 35
         assert row["net_pence"] == 350
     adapter.close()
+
+
+@pytest.mark.parametrize("price", [1, 23, 125, 2500])
+def test_custom_unit_values_can_be_updated_between_hands(price):
+    state = new_game("a", "Custom", Rules(), unit_pence=price)
+    updated = transition(
+        state,
+        "a",
+        {
+            "type": "update_settings",
+            "unit_pence": price + 1,
+            "turn_seconds": None,
+            "orbits": None,
+        },
+    )
+    assert updated["unit_pence"] == price + 1
+
+
+@pytest.mark.parametrize("price", [0, -1, 1.5, True, "25", 1_000_000_001])
+def test_engine_rejects_invalid_custom_unit_values(price):
+    with pytest.raises(RuleError, match="whole number"):
+        new_game("a", "Invalid", Rules(), unit_pence=price)

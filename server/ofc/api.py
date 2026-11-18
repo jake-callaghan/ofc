@@ -49,7 +49,7 @@ class GameInput(Model):
     name: str = Field(min_length=1, max_length=120)
     rules: RuleInput = Field(default_factory=RuleInput)
     visibility: Literal["open", "private"] = "open"
-    unit_pence: Literal[10, 50, 100] = 10
+    unit_pence: int = Field(default=10, ge=1, le=1_000_000_000)
     leaderboard_enabled: bool = True
 
 
@@ -82,7 +82,7 @@ class UpdateSettings(Model):
     turn_seconds: int | None = Field(ge=10, le=300)
     orbits: int | None = Field(ge=1, le=100)
     visibility: Literal["open", "private"] | None = None
-    unit_pence: Literal[10, 50, 100] | None = None
+    unit_pence: int | None = Field(default=None, ge=1, le=1_000_000_000)
     leaderboard_enabled: bool | None = None
 
 
