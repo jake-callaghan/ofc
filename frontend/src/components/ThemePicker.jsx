@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { readSaved, save } from '../lib/storage.js';
 
 const themes = {
+  arcade: { label: 'Neon Arcade', background: 'mesh' },
+  parchment: { label: 'Parchment Parlour', background: 'shapes' },
+  orbital: { label: 'Orbital Station', background: 'dots' },
+  botanical: { label: 'Botanical Conservatory', background: 'waves' },
   ocean: { label: 'Ocean', background: 'waves' },
   slate: { label: 'Slate', background: 'shapes' },
   midnight: { label: 'Midnight', background: 'dots' },
