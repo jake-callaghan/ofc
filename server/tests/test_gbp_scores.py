@@ -47,8 +47,8 @@ def test_net_gbp_uses_each_hand_stake_and_participation(scores):
             gid, a, "close", state["version"], {"type": "leave", "close_table": True}
         )
     assert store.leaderboard() == [
-        {"player_id": b, "name": "Bob", "net_pence": 70, "hands": 2},
-        {"player_id": a, "name": "Alice", "net_pence": -70, "hands": 2},
+        {"player_id": b, "name": "Bob", "net_pence": 70, "hands": 2, "net_units": -1},
+        {"player_id": a, "name": "Alice", "net_pence": -70, "hands": 2, "net_units": 1},
     ]
     assert store.leaderboard(limit=1, offset=1)[0]["player_id"] == a
     assert store.leaderboard(offset=2) == []
@@ -217,4 +217,33 @@ def test_migration_leaves_historical_gbp_unknown(tmp_path):
         assert uow.gbp_balances("g") == {}
         assert uow.leaderboard(50, 0) == []
         assert uow.history("g", 0, 50)[0]["accounting"] is None
+    adapter.close()
+
+
+def test_units_migration_assumes_historical_10p_and_only_runs_once(tmp_path):
+    url = f"sqlite:///{tmp_path / 'units.sqlite3'}"
+    config = configuration(url)
+    command.upgrade(config, "0003")
+    adapter = SQLAlchemyRepository(url)
+    with adapter.engine.begin() as connection:
+        connection.execute(text("INSERT INTO players (id,name) VALUES ('a','Alice')"))
+        connection.execute(
+            text("INSERT INTO games (id,invite_hash,state) VALUES ('g','hash','{}')")
+        )
+        connection.execute(
+            text(
+                "INSERT INTO hands (game_id,number,result,boards,rules) VALUES ('g',1,'{}','{}','{}')"
+            )
+        )
+        connection.execute(
+            text(
+                "INSERT INTO ledger (game_id,hand,player,units,amount_pence,leaderboard_pence) VALUES ('g',1,'a',7,350,350)"
+            )
+        )
+    command.upgrade(config, "head")
+    command.upgrade(config, "head")
+    with adapter.transaction() as uow:
+        row = uow.leaderboard(50, 0)[0]
+        assert row["net_units"] == 35
+        assert row["net_pence"] == 350
     adapter.close()

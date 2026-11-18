@@ -42,8 +42,9 @@ export default function Leaderboard({ session }) {
       aria-label="Leaderboard standings"
     >
       <p className="hint">
-        Net GBP from participating human-only hands. Hands involving a CPU and
-        unpriced historical hands are excluded.
+        Net GBP and units from participating human-only hands. Hands involving a
+        CPU and unpriced historical hands are excluded. Earlier leaderboard
+        scores assume 10p per unit.
       </p>
       <ErrorMessage message={error} />
       {!players ? (
@@ -63,6 +64,13 @@ export default function Leaderboard({ session }) {
               </span>
               <strong className={player.net_pence < 0 ? 'negative' : ''}>
                 {pounds(player.net_pence)}
+                <small className={player.net_units < 0 ? 'negative' : ''}>
+                  {player.net_units > 0 ? '+' : ''}
+                  {player.net_units.toLocaleString('en-GB', {
+                    maximumFractionDigits: 1,
+                  })}{' '}
+                  units
+                </small>
               </strong>
             </li>
           ))}
