@@ -3,7 +3,9 @@
 import sqlite3
 
 import pytest
+from alembic.script import ScriptDirectory
 
+from ofc.schema import configuration
 from ofc.startup import prepare
 
 
@@ -16,7 +18,7 @@ def test_startup_migrates_and_preserves_sqlite_on_restart(tmp_path, monkeypatch)
         assert db.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
         assert (
             db.execute("SELECT version_num FROM alembic_version").fetchone()[0]
-            == "0004"
+            == ScriptDirectory.from_config(configuration()).get_current_head()
         )
         db.execute(
             "INSERT INTO players (id, name, token_hash) VALUES ('alice', 'Alice', NULL)"
