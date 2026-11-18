@@ -1,0 +1,188 @@
+/* each room changes materials and typography while preserving card colours. */
+:root[data-theme='arcade'] {
+  color-scheme: dark;
+  --green: #65ffe2;
+  --felt: #231341;
+  --page: #100923;
+  --surface: #211334;
+  --soft: #35204d;
+  --ink: #fff2ff;
+  --line: #8b57ba;
+  --muted: #d0b4e8;
+  --gold: #ff99dc;
+  --red: #ffa7b3;
+  --on-accent: #112920;
+  --surface-shadow: 5px 5px 0 #ea56bc66;
+  font-family: 'Courier New', monospace;
+}
+:root[data-theme='arcade'] body {
+  background-image:
+    linear-gradient(#be63ff12 1px, transparent 1px),
+    linear-gradient(90deg, #be63ff12 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+:root[data-theme='arcade'] :is(h1, h2, h3, .brand) {
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px #a32c87;
+}
+:root[data-theme='arcade']
+  :is(.panel, .settings-panel, button, input, select, .brand-mark) {
+  border-radius: 0;
+  border-width: 2px;
+}
+:root[data-theme='arcade'] :is(.my-table, .empty-table) {
+  border: 3px double #ff99dc;
+  box-shadow:
+    inset 0 0 35px #a342b044,
+    0 0 18px #65ffe222;
+}
+
+:root[data-theme='parchment'] {
+  color-scheme: light;
+  --green: #733b25;
+  --felt: #49372a;
+  --page: #e9d9b5;
+  --surface: #fff2d4;
+  --soft: #e4cda2;
+  --ink: #39291d;
+  --line: #b69665;
+  --muted: #71583e;
+  --gold: #dbad58;
+  --red: #a12d23;
+  --on-accent: #fff5df;
+  --surface-shadow: 0 5px 12px #54351a22;
+  font-family: Georgia, serif;
+}
+:root[data-theme='parchment'] body {
+  background-image:
+    repeating-linear-gradient(0deg, #79512b06 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at top, #fff7dd, transparent 80%);
+}
+:root[data-theme='parchment'] :is(h1, h2, .brand) {
+  font-family: Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
+:root[data-theme='parchment'] :is(.panel, .settings-panel) {
+  border: 3px double var(--line);
+  border-radius: 3px;
+}
+:root[data-theme='parchment'] :is(button, input, select, .brand-mark) {
+  border-radius: 3px;
+}
+:root[data-theme='parchment'] :is(.my-table, .empty-table) {
+  border: 8px ridge #967043;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #ffffff03 0 2px,
+    transparent 2px 5px
+  );
+}
+:root[data-theme='parchment'] .card {
+  background: #fff5dd;
+  border-color: #c9b58e;
+  font-family: Georgia, serif;
+}
+
+:root[data-theme='orbital'] {
+  color-scheme: dark;
+  --green: #8be9ff;
+  --felt: #0b2535;
+  --page: #050d18;
+  --surface: #101f31;
+  --soft: #1b3348;
+  --ink: #e4f5ff;
+  --line: #45657f;
+  --muted: #a0bed4;
+  --gold: #f4cf87;
+  --red: #ffaaa2;
+  --on-accent: #062632;
+  --surface-shadow: inset 0 1px #c5f4ff22, 0 12px 30px #0005;
+  font-family: 'Courier New', monospace;
+}
+:root[data-theme='orbital'] body {
+  background-image:
+    radial-gradient(circle at 80% 15%, #30679866, transparent 45%),
+    radial-gradient(circle, #c1eaff88 1px, transparent 1.5px);
+  background-size:
+    auto,
+    71px 83px;
+}
+:root[data-theme='orbital'] :is(h1, h2, h3, .brand) {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.04em;
+}
+:root[data-theme='orbital'] :is(.panel, .settings-panel) {
+  border-radius: 2px 24px 2px 24px;
+  border-top: 3px solid var(--green);
+}
+:root[data-theme='orbital'] :is(button, input, select) {
+  border-radius: 2px;
+}
+:root[data-theme='orbital'] :is(.my-table, .empty-table) {
+  background-image:
+    linear-gradient(#8be9ff0a 1px, transparent 1px),
+    linear-gradient(90deg, #8be9ff0a 1px, transparent 1px);
+  background-size: 24px 24px;
+  border: 2px solid #6ca6bc;
+}
+
+:root[data-theme='botanical'] {
+  color-scheme: light;
+  --green: #285b3c;
+  --felt: #254737;
+  --page: #e7efdf;
+  --surface: #fbfcf1;
+  --soft: #dce8ca;
+  --ink: #243f2e;
+  --line: #9fb490;
+  --muted: #536c48;
+  --gold: #e1c47d;
+  --red: #a83e39;
+  --on-accent: #fbfff2;
+  --surface-shadow: 0 8px 25px #34552b18;
+}
+:root[data-theme='botanical'] body {
+  background-image:
+    radial-gradient(ellipse at 0% 40%, #8bb67166, transparent 45%),
+    radial-gradient(ellipse at 100% 90%, #b5c68c88, transparent 45%);
+}
+:root[data-theme='botanical'] :is(h1, h2, .brand) {
+  font-family: Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.5px;
+}
+:root[data-theme='botanical'] :is(.panel, .settings-panel) {
+  border-radius: 28px 5px 28px 5px;
+}
+:root[data-theme='botanical'] :is(button, input, select) {
+  border-radius: 18px;
+}
+:root[data-theme='botanical'] :is(.my-table, .empty-table) {
+  border: 4px solid #87936b;
+  border-radius: 34px;
+  background-image: radial-gradient(
+    ellipse at 50% 0,
+    #83b88322,
+    transparent 70%
+  );
+}
+/* texture stays static and motion continues to obey the existing user setting. */
+:root[data-theme='parchment'] .ambient-background {
+  opacity: 0.15;
+}
+
+:root:is(
+    [data-theme='arcade'],
+    [data-theme='parchment'],
+    [data-theme='orbital'],
+    [data-theme='botanical']
+  )
+  .primary {
+  background: var(--green);
+  color: var(--on-accent);
+  border-color: var(--green);
+}

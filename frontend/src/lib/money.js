@@ -9,5 +9,7 @@ export function pounds(pence) {
 }
 
 export function unitValue(pence) {
-  return pence === 100 ? '£1' : `${pence}p`;
+  return pence >= 100
+    ? `£${(pence / 100).toFixed(pence % 100 === 0 ? 0 : 2)}`
+    : `${pence}p`;
 }

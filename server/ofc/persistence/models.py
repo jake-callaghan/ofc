@@ -62,6 +62,7 @@ class LedgerRow(Base):
     units: Mapped[int] = mapped_column(BigInteger)
     amount_pence: Mapped[int | None] = mapped_column(BigInteger)
     leaderboard_pence: Mapped[int | None] = mapped_column(BigInteger)
+    leaderboard_unit_tenths: Mapped[int | None] = mapped_column(BigInteger)
 
 
 class AuthIdentityRow(Base):

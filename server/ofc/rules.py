@@ -106,7 +106,12 @@ def evaluate(board, rules):
     candy = rules.candyland and all(len({c[1] for c in board[r]}) == 1 for r in ROWS)
     foul = not candy and not (ranks["bottom"] >= ranks["middle"] >= ranks["top"])
     bonus = {r: 0 if foul else royalties(r, ranks[r]) for r in ROWS}
-    moon = rules.moon and not foul and not candy and ranks["bottom"][:2] == (0, 11)
+    moon = (
+        rules.moon
+        and not foul
+        and not candy
+        and all(value[0] == 0 and value[1] <= 11 for value in ranks.values())
+    )
     return {
         "ranks": ranks,
         "foul": foul,

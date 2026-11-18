@@ -18,13 +18,12 @@ test('GBP settings, visible history and host closure work together', async ({
   );
   await page.goto('/');
   await page.getByRole('button', { name: 'Create table', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: '10p', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('10');
+  await expect(page.getByLabel('Currency', { exact: true })).toHaveValue('1');
   await expect(
     page.getByLabel('Count towards the global leaderboard'),
   ).toBeChecked();
-  await page.getByRole('button', { name: '50p', exact: true }).click();
+  await page.getByLabel('Amount', { exact: true }).fill('50');
   await page.getByLabel('Table name', { exact: true }).fill('GBP test table');
   await page
     .getByRole('combobox', { name: 'Fantasyland', exact: true })
@@ -114,7 +113,8 @@ test('GBP settings, visible history and host closure work together', async ({
     current.balances[host.player_id] * 50,
   );
   await page.getByText('Table settings', { exact: true }).click();
-  await page.getByRole('button', { name: '£1', exact: true }).click();
+  await page.getByLabel('Amount', { exact: true }).fill('1');
+  await page.getByLabel('Currency', { exact: true }).selectOption('100');
   await page.getByLabel('Count towards the global leaderboard').uncheck();
   await page
     .getByRole('button', { name: 'Save settings', exact: true })

@@ -11,9 +11,11 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
   await expect(
     page.getByRole('heading', { name: 'Lobby', exact: true }),
   ).toBeVisible();
-  await page.getByRole('tab', { name: 'Join a table' }).click();
+  await page
+    .getByRole('button', { name: 'Join with invite', exact: true })
+    .click();
   await expect(page.getByLabel('Invitation link')).toBeVisible();
-  await page.getByRole('tab', { name: 'Create a table' }).click();
+  await page.getByRole('button', { name: 'Create table', exact: true }).click();
   await expect(page.getByLabel('Table name')).toBeVisible();
 
   for (const width of [1440, 390]) {
@@ -22,7 +24,15 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
     await expect(
       page.getByRole('switch', { name: 'Four-colour suits' }),
     ).toBeVisible();
-    for (const theme of ['ocean', 'midnight', 'casino']) {
+    for (const theme of [
+      'ocean',
+      'midnight',
+      'casino',
+      'arcade',
+      'parchment',
+      'orbital',
+      'botanical',
+    ]) {
       await page.getByLabel('Colour theme').selectOption(theme);
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       expect(
@@ -51,6 +61,8 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
     'data-suit-colours',
     'two',
   );
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'botanical');
+  await page.getByRole('button', { name: 'Create table', exact: true }).click();
   await page.getByLabel('Table name').fill('Modern table');
   await page.getByRole('button', { name: 'Create table →' }).click();
   await expect(
@@ -65,7 +77,9 @@ test('settings and modern lobby controls work on mobile and desktop', async ({
   await page.reload();
   await expect(page.locator('.table-subtitle')).toContainText('45s turns');
   await page.getByRole('button', { name: '← Tables' }).click();
-  await page.getByRole('button', { name: 'Modern table', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'View Modern table', exact: true })
+    .click();
   await expect(
     page.getByRole('heading', { name: 'Modern table' }),
   ).toBeVisible();
@@ -89,7 +103,10 @@ test('themes include backgrounds and respect saved motion preferences', async ({
     'false',
   );
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('data-background', 'waves');
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-background',
+    'waves',
+  );
   await expect(page.locator('.ambient-one')).toHaveCSS(
     'animation-play-state',
     'paused',

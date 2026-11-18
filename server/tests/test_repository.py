@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from db_helpers import create_app
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
@@ -223,7 +224,7 @@ def test_postgres_schema_isolation_and_reset():
             assert connection.scalar(text(f'SELECT id FROM "{other}".keep_me')) == 42
             assert (
                 connection.scalar(text("SELECT version_num FROM ofc.alembic_version"))
-                == "0003"
+                == ScriptDirectory.from_config(configuration(url)).get_current_head()
             )
     finally:
         with engine.begin() as connection:

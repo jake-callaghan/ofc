@@ -173,6 +173,13 @@ class SQLUnitOfWork:
                     player=p,
                     units=n,
                     amount_pence=n * accounting["unit_pence"] if accounting else None,
+                    leaderboard_unit_tenths=(
+                        n * 10
+                        if accounting
+                        and accounting["leaderboard_enabled"]
+                        and not accounting["cpu_involved"]
+                        else None
+                    ),
                     leaderboard_pence=(
                         n * accounting["unit_pence"]
                         if accounting
@@ -245,7 +252,7 @@ class SQLUnitOfWork:
     def leaderboard(self, limit: int, offset: int) -> list[State]:
         total = func.sum(LedgerRow.leaderboard_pence)
         rows = self.session.execute(
-            select(LedgerRow.player, PlayerRow.name, total, func.count())
+            select(LedgerRow.player, PlayerRow.name, total, func.count(), func.sum(LedgerRow.leaderboard_unit_tenths))
             .join(PlayerRow, PlayerRow.id == LedgerRow.player)
             .where(LedgerRow.leaderboard_pence.is_not(None))
             .group_by(LedgerRow.player, PlayerRow.name)
@@ -254,8 +261,8 @@ class SQLUnitOfWork:
             .limit(limit)
         )
         return [
-            {"player_id": player, "name": name, "net_pence": int(pence), "hands": count}
-            for player, name, pence, count in rows
+            {"player_id": player, "name": name, "net_pence": int(pence), "hands": count, "net_units": int(tenths) / 10}
+            for player, name, pence, count, tenths in rows
         ]
 
 
