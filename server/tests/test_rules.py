@@ -98,8 +98,9 @@ def test_pairwise_zero_sum_and_scoop():
     assert compare(strong, weak)["total"] == -compare(weak, strong)["total"]
 
 
-def test_moon_replaces_normal_score():
-    moon = board("2c 4d 6h", "3c 5d 7h 8s 9c", "2h 4s 6c 8d Jh")
+@pytest.mark.parametrize("high", ["T", "J"])
+def test_moon_replaces_normal_score(high):
+    moon = board("2c 4d 6h", "3c 5d 7h 8s 9c", f"2h 4s 6c 8d {high}h")
     evaluated = evaluate(moon, Rules(moon=True))
     assert evaluated["moon"] and not evaluated["foul"]
     assert compare(evaluated, evaluate(VALID, Rules()))["total"] == 20
@@ -131,3 +132,12 @@ def test_invalid_rules_and_duplicates():
         Rules(variant="classic")
     with pytest.raises(RuleError):
         settle({"a": VALID, "b": VALID}, Rules())
+
+
+@pytest.mark.parametrize(
+    "bottom", ["2h 4s 6c 8d Qh", "2h 2s 6c 8d Jh", "2h 3s 4c 5h 6s", "2d 3d 6d 8d Jd"]
+)
+def test_moon_rejects_stronger_rows_and_fouls(bottom):
+    assert not evaluate(board("2c 4d 6h", "3c 5d 7h 8s 9c", bottom), Rules(moon=True))[
+        "moon"
+    ]
