@@ -187,7 +187,11 @@ export default function TurnEditor({
               />
             ))}
             {unassignedCards.length === 0 && (
-              <p className="all-set">Ready to confirm.</p>
+              <p className="all-set">
+                {preview.foul
+                  ? 'All cards placed. Check the warning above.'
+                  : 'Ready to confirm.'}
+              </p>
             )}
           </div>
           {discardedCards.length > 0 && (

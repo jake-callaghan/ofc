@@ -86,6 +86,9 @@ for (const normalActive of [true, false]) {
         await route.fulfill({ json: { state: game, applied_version: 3 } });
       }
     });
+    await page.route('**/api/games/fantasy/hands?**', (route) =>
+      route.fulfill({ json: [] }),
+    );
     await page.goto('/#game=fantasy');
     await expect(page.getByText('Live table', { exact: true })).toBeVisible();
     await expect(page.locator('.turn-banner')).toHaveText(

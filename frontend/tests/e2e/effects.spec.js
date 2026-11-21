@@ -3,7 +3,10 @@ import { test, expect } from '@playwright/test';
 const empty = () => ({ top: [], middle: [], bottom: [] });
 const fantasyCards = 'Ts Jd 2h 3h 4h 6h 7h Kc Kd Ks 5s 5c 2d 3s 8c'.split(' ');
 
-async function mockTable(page, { complete = false, fantasy = true } = {}) {
+async function mockTable(
+  page,
+  { complete = false, fantasy = true, drawCards = fantasyCards } = {},
+) {
   const valid = {
     top: ['Ts', 'Jd', '8c'],
     middle: ['2h', '3h', '4h', '6h', '7h'],
@@ -30,7 +33,7 @@ async function mockTable(page, { complete = false, fantasy = true } = {}) {
       fantasy_pending: !complete && fantasy ? ['a'] : [],
       boards: { a: complete ? valid : empty(), b: empty() },
       discards: { a: [] },
-      draws: { a: complete ? [] : fantasyCards },
+      draws: { a: complete ? [] : drawCards },
       turn: { player: 'a', keep: 13, draw: 15 },
       deadline: null,
       result: complete
@@ -89,6 +92,9 @@ async function mockTable(page, { complete = false, fantasy = true } = {}) {
       ws.send(JSON.stringify({ type: 'snapshot', state: game })),
     );
   });
+  await page.route('**/api/games/effects/hands?**', (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.goto('/#game=effects');
   await expect(page.getByText('Live table', { exact: true })).toBeVisible();
   return {
@@ -187,6 +193,32 @@ test('live royalties warn without losing cards, then celebrate a repaired fantas
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1600 });
+  await page.evaluate(() => scrollTo(0, 0));
+  const source = await page
+    .locator('.discard-zone .card')
+    .first()
+    .boundingBox();
+  const destination = await page
+    .locator('.my-table .board-row')
+    .first()
+    .boundingBox();
+  await page.mouse.move(
+    source.x + source.width / 2,
+    source.y + source.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    destination.x + destination.width / 2,
+    destination.y + destination.height / 2,
+    { steps: 6 },
+  );
+  await page.mouse.up();
+  await expect(page.locator('.placement-feedback')).toContainText(
+    'Top is full.',
+  );
+  await expect(page.locator('.my-table .board .card')).toHaveCount(13);
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
     path: testInfo.outputPath('royalty-preview-mobile.png'),
     fullPage: true,
@@ -252,4 +284,54 @@ test('showdown reveals rows and finishes count-up; reduced motion shows final sc
   await expect(page.locator('.result-units strong').first()).toHaveText(
     '+14 units',
   );
+});
+
+test('royalty names fit above the cards at desktop and narrow phone widths', async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await mockTable(page, {
+    drawCards: '2c 3c 4c 5c 6c 7c 8c 9c Tc Jc Qc Kc Ac 2d'.split(' '),
+  });
+  for (const [row, names] of [
+    ['top', ['2', '3', '4']],
+    ['middle', ['5', '6', '7', '8', '9']],
+    ['bottom', ['10', 'J', 'Q', 'K', 'A']],
+  ])
+    for (const name of names) await place(page, `${name} of clubs`, row);
+  await expect(
+    page.getByLabel('middle: Straight flush, 30 provisional royalty units'),
+  ).toBeVisible();
+  for (const theme of ['casino', 'arcade']) {
+    await page.locator('.settings > summary').click();
+    await page.getByLabel('Colour theme').selectOption(theme);
+    await page.keyboard.press('Escape');
+    for (const width of [1440, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      const fits = await page
+        .locator('.royalty-preview')
+        .evaluateAll((labels) =>
+          labels.every((label) => {
+            const row = label.closest('.board-row').getBoundingClientRect();
+            const text = label.getBoundingClientRect();
+            return (
+              label.scrollWidth <= label.clientWidth &&
+              text.left >= row.left &&
+              text.right <= row.right + 1
+            );
+          }),
+        );
+      expect(fits).toBe(true);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  }
+  await page.screenshot({
+    path: testInfo.outputPath('royalty-labels-narrow.png'),
+    fullPage: true,
+    animations: 'disabled',
+  });
 });

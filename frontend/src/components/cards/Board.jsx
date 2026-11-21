@@ -16,7 +16,7 @@ export default function Board({
 }) {
   return (
     <div
-      className={`board ${compact ? 'compact' : ''} ${reveal ? 'showdown-board' : ''} ${recovered ? 'board-recovered' : ''}`}
+      className={`board ${preview ? 'board-with-preview' : ''} ${compact ? 'compact' : ''} ${reveal ? 'showdown-board' : ''} ${recovered ? 'board-recovered' : ''}`}
     >
       {Object.entries(ROWS).map(([row, size]) => {
         const placed = board[row] || [];

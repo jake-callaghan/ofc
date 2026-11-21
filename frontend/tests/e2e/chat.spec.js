@@ -11,6 +11,9 @@ test('table members exchange chat and reactions and can hide the panel', async (
     await owner.goto('/');
     await owner.getByLabel('Display name').fill('Chat owner');
     await owner.getByRole('button', { name: 'Continue', exact: true }).click();
+    await owner
+      .getByRole('button', { name: 'Create table', exact: true })
+      .click();
     await owner.getByRole('button', { name: 'Create table →' }).click();
     await owner.getByText('Show invitation', { exact: true }).click();
     const link = await owner.getByLabel('Invitation link').inputValue();

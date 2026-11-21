@@ -56,6 +56,9 @@ test('a later draw can be arranged early and confirmed when the turn arrives', a
     game = { ...game, version: 3, hand: { ...game.hand, draws: { a: [] } } };
     await route.fulfill({ json: { state: game, applied_version: 3 } });
   });
+  await page.route('**/api/games/early/hands?**', (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.goto('/#game=early');
   await expect(page.getByText('Live table', { exact: true })).toBeVisible();
   await expect(

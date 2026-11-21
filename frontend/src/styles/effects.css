@@ -415,3 +415,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* give preview text the row width instead of squeezing it beside five cards. */
+.my-table .board-with-preview .board-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.my-table .board-with-preview .row-label {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.my-table .board-with-preview .row-label .royalty-preview {
+  margin: 0;
+  font-size: 11px;
+  opacity: 1;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  transform-origin: right center;
+}

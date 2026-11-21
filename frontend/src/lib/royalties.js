@@ -85,7 +85,7 @@ export function previewBoard(board, draft = {}, rules = {}) {
   const complete = Object.values(ranks).every(Boolean);
   const candyland =
     complete &&
-    rules.candyland &&
+    !!rules.candyland &&
     Object.values(rows).every(
       (cards) => new Set(cards.map((card) => card[1])).size === 1,
     );
@@ -112,7 +112,7 @@ export function previewBoard(board, draft = {}, rules = {}) {
   const foul = invalidRows.length > 0;
   const moon =
     complete &&
-    rules.moon &&
+    !!rules.moon &&
     !candyland &&
     !foul &&
     Object.values(ranks).every((rank) => rank[0] === 0 && rank[1] <= 11);

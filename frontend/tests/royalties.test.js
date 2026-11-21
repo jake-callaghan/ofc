@@ -97,5 +97,5 @@ test('candyland overrides normal fouls; moon requires all rows at most jack high
   assert.equal(previewBoard(candy, {}, { candyland: true }).candyland, true);
   const moon = board('2c 4d 6h', '3c 5d 7h 8s 9c', '2h 4s 6c 8d Th');
   assert.equal(previewBoard(moon, {}, { moon: true }).moon, true);
-  assert.equal(previewBoard(moon).moon, undefined);
+  assert.equal(previewBoard(moon).moon, false);
 });
