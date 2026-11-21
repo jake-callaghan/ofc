@@ -200,7 +200,7 @@ select.theme-picker {
     .eyebrow,
     .variant small,
     .table-meta,
-    .result-units span,
+    .result-units > div > span,
     .result-units strong small,
     .pair-values,
     .history summary > span,

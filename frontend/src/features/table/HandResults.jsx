@@ -30,14 +30,17 @@ export default function HandResults({ game }) {
           </div>
         ))}
       </div>
-      <ShowdownComparison
-        result={hand.result}
-        names={names}
-      />
       <ScoreBreakdown
         result={hand.result}
         names={names}
       />
+      <details className="showdown-details">
+        <summary>Row-by-row comparison</summary>
+        <ShowdownComparison
+          result={hand.result}
+          names={names}
+        />
+      </details>
     </section>
   );
 }

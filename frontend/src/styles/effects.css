@@ -438,3 +438,17 @@
   white-space: nowrap;
   transform-origin: right center;
 }
+
+.showdown-details {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.showdown-details > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+}
+.result-units strong {
+  font-variant-numeric: tabular-nums;
+}

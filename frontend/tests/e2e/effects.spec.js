@@ -267,6 +267,18 @@ test('showdown reveals rows and finishes count-up; reduced motion shows final sc
   page,
 }) => {
   await mockTable(page, { complete: true, fantasy: false });
+  await expect(page.locator('.showdown-row-result').first()).toBeHidden();
+  await expect(
+    page.locator('.result-units strong').first().locator('span').last(),
+  ).toHaveCSS('font-size', '26px');
+  const scoreColour = await page
+    .locator('.result-units strong')
+    .first()
+    .evaluate((element) => getComputedStyle(element).color);
+  await expect(
+    page.locator('.result-units strong').first().locator('span').last(),
+  ).toHaveCSS('color', scoreColour);
+  await page.getByText('Row-by-row comparison', { exact: true }).click();
   await expect(page.locator('.showdown-row-result')).toHaveCount(3);
   await expect(page.locator('.showdown-row-result').first()).toContainText(
     'Alice · +1',
