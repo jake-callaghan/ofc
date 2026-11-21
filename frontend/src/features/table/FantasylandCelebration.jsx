@@ -1,4 +1,4 @@
-export default function FantasylandCelebration() {
+export default function FantasylandCelebration({ staying = false }) {
   return (
     <div
       className="fantasyland-celebration"
@@ -25,7 +25,7 @@ export default function FantasylandCelebration() {
           />
         ))}
       </span>
-      <strong>Fantasyland!</strong>
+      <strong>{staying ? 'Still dreaming ✦' : 'Fantasyland!'}</strong>
     </div>
   );
 }

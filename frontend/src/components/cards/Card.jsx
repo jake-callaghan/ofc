@@ -8,6 +8,7 @@ export default function Card({
   onDrop,
   small = false,
   ariaLabel,
+  dealIndex,
 }) {
   const dragHandlers = useCardDrag(onDrop);
   const red = card?.endsWith('h') || card?.endsWith('d');
@@ -34,6 +35,7 @@ export default function Card({
     <button
       {...dragHandlers}
       draggable={false}
+      style={dealIndex == null ? undefined : { '--deal-index': dealIndex }}
       type="button"
       className={cardClass}
       disabled={!onClick}

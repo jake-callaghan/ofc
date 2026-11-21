@@ -28,11 +28,15 @@ export default function Opponents({ hand, names, playerId, nextFantasy }) {
             </div>
             <div className="celebration-board">
               {hand.status === 'complete' && nextFantasy[p] > 0 && (
-                <FantasylandCelebration key={hand.number} />
+                <FantasylandCelebration
+                  key={hand.number}
+                  staying={!!hand.fantasy[p]}
+                />
               )}
               <Board
                 board={hand.boards[p]}
                 compact
+                reveal={hand.status === 'complete'}
                 hidden={
                   (!!hand.fantasy[p] || !!hand.fantasy[playerId]) &&
                   hand.status !== 'complete'

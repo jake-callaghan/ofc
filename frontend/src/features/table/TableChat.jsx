@@ -1,16 +1,65 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api.js';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
+import { useEffects } from '../../effects/Effects.jsx';
 
-const reactions = ['🐟', '🍀', '🚀', '💩', '🌕', '🤞', '🍬', '😎', '👏'];
+const emojiEffects = {
+  '🐟': 'fish',
+  '🍀': 'luck',
+  '🚀': 'rocket',
+  '💩': 'poo',
+  '🌝': 'moon',
+  '🤞': 'fingers',
+  '🍬': 'candy',
+  '😎': 'cool',
+  '👏': 'clap',
+};
+
+const reactions = ['🐟', '🍀', '🚀', '💩', '🌝', '🤞', '🍬', '😎', '👏'];
 
 export default function TableChat({ game, session, connection }) {
+  const { enabled: effectsEnabled } = useEffects();
+  const [burst, setBurst] = useState(null);
+  const lastBurst = useRef(-Infinity);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const messages = game.chat || [];
   const lastId = messages.at(-1)?.id;
+  const knownMessages = useRef(new Set(messages.map((message) => message.id)));
+  useEffect(() => {
+    const fresh = messages.filter(
+      (message) => !knownMessages.current.has(message.id),
+    );
+    knownMessages.current = new Set(messages.map((message) => message.id));
+    const message = fresh
+      .filter((message) => emojiEffects[message.text])
+      .at(-1);
+    // consume closed-panel history without replaying it, and cap bursts at one per 2.5s.
+    if (
+      !open ||
+      !effectsEnabled ||
+      document.hidden ||
+      !message ||
+      performance.now() - lastBurst.current < 2500
+    )
+      return;
+    lastBurst.current = performance.now();
+    setBurst({
+      id: message.id,
+      emoji: message.text,
+      effect: emojiEffects[message.text],
+    });
+  }, [messages, open, effectsEnabled]);
+  useEffect(() => {
+    if (!burst) return;
+    const timer = setTimeout(() => setBurst(null), 1600);
+    return () => clearTimeout(timer);
+  }, [burst]);
+  useEffect(() => {
+    if (!effectsEnabled || !open) setBurst(null);
+  }, [effectsEnabled, open]);
   const [seen, setSeen] = useState(lastId);
   const input = useRef(null);
   const toggle = useRef(null);
@@ -33,6 +82,7 @@ export default function TableChat({ game, session, connection }) {
 
   function close() {
     setOpen(false);
+    setBurst(null);
     toggle.current?.focus();
   }
 
@@ -68,6 +118,21 @@ export default function TableChat({ game, session, connection }) {
             if (event.key === 'Escape') close();
           }}
         >
+          {effectsEnabled && burst && (
+            <div
+              className={`chat-effect chat-effect-${burst.effect}`}
+              key={burst.id}
+              aria-hidden="true"
+            >
+              <span>{burst.emoji}</span>
+              {burst.effect === 'clap' && (
+                <>
+                  <i>👏</i>
+                  <i>👏</i>
+                </>
+              )}
+            </div>
+          )}
           <header className="chat-heading">
             <h2>Table chat</h2>
             <button

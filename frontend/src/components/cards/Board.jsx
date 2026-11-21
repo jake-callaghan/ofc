@@ -9,9 +9,15 @@ export default function Board({
   remove,
   hidden,
   compact = false,
+  preview,
+  reveal = false,
+  recovered = false,
+  blockedRow,
 }) {
   return (
-    <div className={`board ${compact ? 'compact' : ''}`}>
+    <div
+      className={`board ${compact ? 'compact' : ''} ${reveal ? 'showdown-board' : ''} ${recovered ? 'board-recovered' : ''}`}
+    >
       {Object.entries(ROWS).map(([row, size]) => {
         const placed = board[row] || [];
         const pending = Object.keys(draft).filter(
@@ -20,12 +26,22 @@ export default function Board({
         const slots = Math.max(0, size - placed.length - pending.length);
         return (
           <div
-            className="board-row"
-            data-drop-row={editable && !hidden && slots > 0 ? row : undefined}
+            className={`board-row ${preview?.invalidRows.includes(row) || blockedRow === row ? 'row-invalid' : ''}`}
+            style={{ '--row-index': Object.keys(ROWS).indexOf(row) }}
+            data-drop-row={editable && !hidden ? row : undefined}
             key={row}
           >
             <div className="row-label">
               <span>{row}</span>
+              {preview?.labels[row] && (
+                <small
+                  className="royalty-preview"
+                  key={`${preview.labels[row]}:${preview.royalties[row]}`}
+                  aria-label={`${row}: ${preview.labels[row]}, ${preview.royalties[row]} provisional royalty units`}
+                >
+                  {preview.labels[row]} · +{preview.royalties[row]}
+                </small>
+              )}
             </div>
             <div className="row-cards">
               {placed.map((card) => (

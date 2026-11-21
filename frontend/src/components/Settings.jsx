@@ -3,6 +3,7 @@ import InstallApp from './InstallApp.jsx';
 import SuitColours from './SuitColours.jsx';
 import ThemePicker from './ThemePicker.jsx';
 import BackgroundMotion from './BackgroundMotion.jsx';
+import EffectsToggle from '../effects/Effects.jsx';
 
 export default function Settings({
   session,
@@ -78,6 +79,7 @@ export default function Settings({
             <ThemePicker />
           </div>
           <BackgroundMotion />
+          <EffectsToggle />
           <SuitColours />
           <InstallApp />
         </div>

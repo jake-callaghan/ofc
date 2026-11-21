@@ -1,0 +1,417 @@
+/* effects are finite, decorative, and never capture card or chat input. */
+.effects-note {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.placement-feedback {
+  margin-top: 14px;
+  padding: 9px 12px;
+  border: 1px solid #a4d9ba66;
+  border-radius: 8px;
+  color: #d7f5e4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.placement-warning {
+  color: #ffdda3;
+  border-color: #e4af5a;
+  background: #d3932314;
+}
+.board-row.row-invalid {
+  outline: 2px solid #e4af5a;
+  outline-offset: 3px;
+  background: #e4af5a16;
+}
+.row-label .royalty-preview {
+  color: var(--gold);
+  font-size: 10px;
+  opacity: 1;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow-wrap: anywhere;
+}
+:root[data-effects='true'] .royalty-preview {
+  animation: royalty-pop 240ms ease-out;
+}
+:root[data-effects='true'] .row-invalid {
+  animation: row-wobble 380ms ease-out;
+}
+:root[data-effects='true'] .board-recovered {
+  animation: valid-ripple 700ms ease-out;
+}
+:root[data-effects='true'] .showdown-board .board-row {
+  animation: row-reveal 450ms calc(var(--row-index) * 400ms) ease-out both;
+}
+:root[data-effects='true'] .showdown-row-result {
+  animation: row-reveal 450ms calc(var(--row-index) * 400ms) ease-out both;
+}
+:root[data-effects='true'] .fantasyland-entry {
+  position: relative;
+  isolation: isolate;
+}
+:root[data-effects='true'] .fantasyland-entry::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background: linear-gradient(120deg, #86efac44, #a5a5ff66, #f9a8d444);
+  animation: fantasy-aurora 1800ms ease-out both;
+}
+:root[data-effects='true'] .fantasyland-entry .draw-cards .card:not(.dragging) {
+  animation: fantasy-deal 280ms calc(var(--deal-index) * 28ms) ease-out
+    backwards;
+}
+/* confetti finishes rather than looping for the entire time between hands. */
+.fantasyland-confetti i {
+  animation-iteration-count: 1;
+}
+.showdown-comparisons {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.showdown-comparison {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+.showdown-comparison > span {
+  color: var(--muted);
+}
+.showdown-row-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.showdown-row-result {
+  display: block;
+  padding: 8px;
+  background: var(--soft);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.showdown-row-result b {
+  display: block;
+  text-transform: capitalize;
+  margin-bottom: 5px;
+}
+.showdown-row-result small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.chat-panel {
+  position: relative;
+}
+.chat-effect {
+  position: absolute;
+  inset: 45px 8px 130px;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+.chat-effect > span {
+  font-size: 54px;
+  filter: drop-shadow(0 3px 5px #0003);
+}
+.chat-effect-fish > span {
+  animation: emoji-swim 1400ms ease-in-out both;
+}
+.chat-effect-rocket > span {
+  animation: emoji-launch 1400ms ease-in both;
+}
+.chat-effect-poo > span {
+  animation: emoji-drop 1200ms ease-out both;
+}
+.chat-effect-moon {
+  background:
+    radial-gradient(circle at 20% 30%, #fff 1px, transparent 2px),
+    radial-gradient(circle at 80% 65%, #fff 1px, transparent 2px),
+    radial-gradient(ellipse, #232e6377, transparent 75%);
+  background-size:
+    51px 57px,
+    79px 89px,
+    auto;
+  animation: moon-light 1500ms ease-in-out both;
+}
+.chat-effect-moon > span {
+  filter: drop-shadow(0 0 18px #ffedb2);
+}
+.chat-effect-candy > span {
+  animation: emoji-tumble 1400ms ease-out both;
+}
+.chat-effect-luck > span {
+  animation: emoji-luck 1300ms ease-out both;
+}
+.chat-effect-fingers > span {
+  animation: emoji-cross 1200ms ease-in-out both;
+}
+.chat-effect-cool > span {
+  animation: emoji-cool 1300ms ease-out both;
+}
+.chat-effect-clap > span,
+.chat-effect-clap > i {
+  animation: emoji-clap 1100ms ease-out both;
+}
+.chat-effect-clap > i {
+  position: absolute;
+  font-style: normal;
+  font-size: 30px;
+  left: 20%;
+  top: 30%;
+  animation-delay: 120ms;
+}
+.chat-effect-clap > i:last-child {
+  left: 70%;
+  top: 60%;
+  animation-delay: 240ms;
+}
+@keyframes row-wobble {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  65% {
+    transform: translateX(4px);
+  }
+}
+@keyframes valid-ripple {
+  0% {
+    box-shadow: 0 0 0 0 #86efac88;
+  }
+  100% {
+    box-shadow: 0 0 0 14px #86efac00;
+  }
+}
+@keyframes royalty-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  70% {
+    transform: scale(1.07);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes row-reveal {
+  from {
+    opacity: 0.25;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fantasy-aurora {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  65% {
+    opacity: 1;
+    box-shadow: 0 0 26px #a5a5ff66;
+  }
+}
+@keyframes fantasy-deal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes emoji-swim {
+  0% {
+    opacity: 0;
+    transform: translate(-140px, 15px) rotate(-8deg);
+  }
+  25% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(20px, -12px) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(150px, 10px);
+  }
+}
+@keyframes emoji-launch {
+  0% {
+    opacity: 0;
+    transform: translate(-50px, 95px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(100px, -140px) scale(1.2);
+  }
+}
+@keyframes emoji-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-110px);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(12px) scale(1.12, 0.85);
+  }
+  60% {
+    transform: translateY(-18px);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+@keyframes moon-light {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes emoji-tumble {
+  0% {
+    opacity: 0;
+    transform: translate(-90px, -80px) rotate(-140deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(90px, 100px) rotate(180deg);
+  }
+}
+@keyframes emoji-luck {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-15deg);
+  }
+  40%,
+  70% {
+    opacity: 1;
+    transform: scale(1.1) rotate(10deg);
+    filter: drop-shadow(0 0 15px #86efac);
+  }
+}
+@keyframes emoji-cross {
+  0%,
+  100% {
+    opacity: 0;
+    transform: rotate(0);
+  }
+  20%,
+  60% {
+    opacity: 1;
+    transform: rotate(-12deg);
+  }
+  40%,
+  80% {
+    opacity: 1;
+    transform: rotate(12deg);
+  }
+}
+@keyframes emoji-cool {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-20deg);
+  }
+  40%,
+  75% {
+    opacity: 1;
+    transform: scale(1.1) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+@keyframes emoji-clap {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  25%,
+  65% {
+    opacity: 1;
+    transform: scale(1.15) rotate(-10deg);
+  }
+  45%,
+  80% {
+    opacity: 1;
+    transform: scale(0.9) rotate(10deg);
+  }
+}
+:root[data-effects='false']
+  :is(.fantasyland-confetti, .shimmer-spark, .chat-effect) {
+  display: none;
+}
+:root[data-effects='false']
+  :is(
+    .fantasyland-celebration strong,
+    .draft-card,
+    .royalty-preview,
+    .board-row,
+    .shimmer-backdrop
+  ) {
+  animation: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-effect,
+  .fantasyland-entry::before,
+  .fantasyland-confetti {
+    display: none;
+  }
+  :root[data-effects]
+    :is(
+      .board,
+      .board-row,
+      .royalty-preview,
+      .showdown-row-result,
+      .fantasyland-entry .card,
+      .fantasyland-celebration strong
+    ) {
+    animation: none;
+    transition: none;
+  }
+}
+@media (max-width: 600px) {
+  .showdown-row-results {
+    grid-template-columns: 1fr;
+  }
+}

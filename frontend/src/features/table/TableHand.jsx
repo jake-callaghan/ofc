@@ -28,7 +28,12 @@ export default function TableHand({
 
   return (
     <>
-      {isComplete && <HandResults game={game} />}
+      {isComplete && (
+        <HandResults
+          key={hand.number}
+          game={game}
+        />
+      )}
 
       <div className="hand-boards">
         {isPlaying && (
